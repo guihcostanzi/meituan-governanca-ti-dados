@@ -1,0 +1,1599 @@
+{
+  "meta": {
+    "generated_at": "2026-10-03T13:55:15.104710+00:00",
+    "row_counts": {
+      "WB": 654343,
+      "WV": 206748,
+      "DR": 62044,
+      "DW": 15921
+    },
+    "reference": {
+      "orders": 568546,
+      "couriers": 4955,
+      "merchants": 4962,
+      "districts": 23,
+      "prebook_rate": 0.039,
+      "rejected_couriers": 54,
+      "dispatch_nonconformance_rate": 0.0181
+    }
+  },
+  "tables": {
+    "WB": {
+      "rows": 654343,
+      "columns": [
+        "dt",
+        "order_id",
+        "waybill_id",
+        "courier_id",
+        "da_id",
+        "is_courier_grabbed",
+        "is_weekend",
+        "estimate_arrived_time",
+        "is_prebook",
+        "poi_id",
+        "sender_lng",
+        "sender_lat",
+        "recipient_lng",
+        "recipient_lat",
+        "grab_lng",
+        "grab_lat",
+        "dispatch_time",
+        "grab_time",
+        "fetch_time",
+        "arrive_time",
+        "estimate_meal_prepare_time",
+        "order_push_time",
+        "platform_order_time"
+      ]
+    },
+    "WV": {
+      "rows": 206748,
+      "columns": [
+        "courier_id",
+        "wave_id",
+        "wave_start_time",
+        "wave_end_time",
+        "order_ids"
+      ]
+    },
+    "DR": {
+      "rows": 62044,
+      "columns": [
+        "dt",
+        "rider_lat",
+        "rider_lng",
+        "dispatch_time",
+        "courier_waybills",
+        "courier_id"
+      ]
+    },
+    "DW": {
+      "rows": 15921,
+      "columns": [
+        "dt",
+        "dispatch_time",
+        "order_id"
+      ]
+    }
+  },
+  "dimensions": {
+    "completeness": [
+      {
+        "check_id": "C-01",
+        "description": "Raw null scan: literal NaN/empty per column per table",
+        "metric": "total_nan_cells",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "per_table": {
+            "WB": {
+              "n_nan": 0,
+              "columns": {}
+            },
+            "WV": {
+              "n_nan": 0,
+              "columns": {}
+            },
+            "DR": {
+              "n_nan": 0,
+              "columns": {}
+            },
+            "DW": {
+              "n_nan": 0,
+              "columns": {}
+            }
+          }
+        }
+      },
+      {
+        "check_id": "C-02",
+        "description": "Sentinel-zero census: count+pct of 0 per numeric column (annotated sentinel vs valid_id)",
+        "metric": "n_columns_with_zero",
+        "value": 10,
+        "expected": "flag sentinel columns",
+        "status": "INFO",
+        "details": {
+          "n_columns_with_zero": 16,
+          "n_sentinel_columns": 10,
+          "n_valid_id_columns": 6,
+          "sentinel_columns": [
+            "WB.is_courier_grabbed",
+            "WB.is_weekend",
+            "WB.is_prebook",
+            "WB.grab_lng",
+            "WB.grab_lat",
+            "WB.dispatch_time",
+            "WB.grab_time",
+            "WB.fetch_time",
+            "WB.arrive_time",
+            "WB.estimate_meal_prepare_time"
+          ],
+          "valid_id_columns": [
+            "WB.order_id",
+            "WB.waybill_id",
+            "WB.courier_id",
+            "WB.da_id",
+            "WB.poi_id",
+            "WV.courier_id"
+          ],
+          "per_table": {
+            "WB": {
+              "order_id": {
+                "n_zero": 2,
+                "pct": 0.000306,
+                "zero_kind": "valid_id"
+              },
+              "waybill_id": {
+                "n_zero": 1,
+                "pct": 0.000153,
+                "zero_kind": "valid_id"
+              },
+              "courier_id": {
+                "n_zero": 33,
+                "pct": 0.005043,
+                "zero_kind": "valid_id"
+              },
+              "da_id": {
+                "n_zero": 148903,
+                "pct": 22.756108,
+                "zero_kind": "valid_id"
+              },
+              "is_courier_grabbed": {
+                "n_zero": 85797,
+                "pct": 13.111931,
+                "zero_kind": "sentinel"
+              },
+              "is_weekend": {
+                "n_zero": 476184,
+                "pct": 72.772842,
+                "zero_kind": "sentinel"
+              },
+              "is_prebook": {
+                "n_zero": 630234,
+                "pct": 96.315541,
+                "zero_kind": "sentinel"
+              },
+              "poi_id": {
+                "n_zero": 757,
+                "pct": 0.115689,
+                "zero_kind": "valid_id"
+              },
+              "grab_lng": {
+                "n_zero": 85797,
+                "pct": 13.111931,
+                "zero_kind": "sentinel"
+              },
+              "grab_lat": {
+                "n_zero": 85797,
+                "pct": 13.111931,
+                "zero_kind": "sentinel"
+              },
+              "dispatch_time": {
+                "n_zero": 1,
+                "pct": 0.000153,
+                "zero_kind": "sentinel"
+              },
+              "grab_time": {
+                "n_zero": 85797,
+                "pct": 13.111931,
+                "zero_kind": "sentinel"
+              },
+              "fetch_time": {
+                "n_zero": 85797,
+                "pct": 13.111931,
+                "zero_kind": "sentinel"
+              },
+              "arrive_time": {
+                "n_zero": 85798,
+                "pct": 13.112083,
+                "zero_kind": "sentinel"
+              },
+              "estimate_meal_prepare_time": {
+                "n_zero": 9907,
+                "pct": 1.514038,
+                "zero_kind": "sentinel"
+              }
+            },
+            "WV": {
+              "courier_id": {
+                "n_zero": 9,
+                "pct": 0.004353,
+                "zero_kind": "valid_id"
+              }
+            },
+            "DR": {},
+            "DW": {}
+          }
+        }
+      },
+      {
+        "check_id": "C-03",
+        "description": "Rejected-waybill field completeness (all 5 fields zero)",
+        "metric": "pct_all_zero",
+        "value": 100.0,
+        "expected": "100%",
+        "status": "PASS",
+        "details": {
+          "n_rejected": 85797,
+          "n_all_zero": 85797,
+          "pct_all_zero": 100.0
+        }
+      },
+      {
+        "check_id": "C-04",
+        "description": "Accepted-waybill field completeness (any of 5 fields zero)",
+        "metric": "n_any_zero",
+        "value": 1,
+        "expected": "0",
+        "status": "FAIL",
+        "details": {
+          "n_accepted": 568546,
+          "n_any_zero": 1,
+          "pct_any_zero": 0.000176
+        }
+      },
+      {
+        "check_id": "C-05",
+        "description": "arrive_time gap: count(arrive_time=0) - count(rejected)",
+        "metric": "gap",
+        "value": 1,
+        "expected": "0 (observed +1 anomaly)",
+        "status": "WARN",
+        "details": {
+          "arrive_time_zero": 85798,
+          "rejected": 85797,
+          "gap": 1
+        }
+      },
+      {
+        "check_id": "C-06",
+        "description": "da_id value-0 present (valid entity ID, not missing)",
+        "metric": "n_zero",
+        "value": 148903,
+        "expected": "~22.8%",
+        "status": "INFO",
+        "details": {
+          "n_zero": 148903,
+          "pct": 22.756108,
+          "distinct_including_zero": 23,
+          "distinct_excluding_zero": 22,
+          "reference": 23,
+          "note": "da_id=0 is a valid anonymized district id, not missing"
+        }
+      },
+      {
+        "check_id": "C-07",
+        "description": "poi_id value-0 present (valid entity ID, not missing)",
+        "metric": "n_zero",
+        "value": 757,
+        "expected": "~757",
+        "status": "INFO",
+        "details": {
+          "n_zero": 757,
+          "pct": 0.115689,
+          "distinct_including_zero": 4962,
+          "distinct_excluding_zero": 4961,
+          "reference": 4962,
+          "note": "poi_id=0 is a valid anonymized merchant id, not missing"
+        }
+      },
+      {
+        "check_id": "C-08",
+        "description": "estimate_meal_prepare_time missingness (=0)",
+        "metric": "n_zero",
+        "value": 9907,
+        "expected": "~9,907",
+        "status": "INFO",
+        "details": {
+          "n_zero": 9907,
+          "pct": 1.514038
+        }
+      },
+      {
+        "check_id": "C-09",
+        "description": "courier_id value-0 present (valid entity ID, not missing)",
+        "metric": "n_zero",
+        "value": 33,
+        "expected": "~33",
+        "status": "INFO",
+        "details": {
+          "n_zero": 33,
+          "pct": 0.005043,
+          "distinct_including_zero": 4955,
+          "distinct_excluding_zero": 4954,
+          "reference": 4955,
+          "note": "courier_id=0 is a valid anonymized courier id, not missing"
+        }
+      },
+      {
+        "check_id": "C-10",
+        "description": "Daily coverage: rows/day, distinct days, consecutiveness",
+        "metric": "n_distinct_days",
+        "value": 8,
+        "expected": "8 consecutive days",
+        "status": "PASS",
+        "details": {
+          "rows_per_day": {
+            "20221017": 77027,
+            "20221018": 79932,
+            "20221019": 78871,
+            "20221020": 79179,
+            "20221021": 83295,
+            "20221022": 88813,
+            "20221023": 89205,
+            "20221024": 78021
+          },
+          "min_rows": 77027,
+          "max_rows": 89205,
+          "consecutive": true,
+          "days": [
+            20221017,
+            20221018,
+            20221019,
+            20221020,
+            20221021,
+            20221022,
+            20221023,
+            20221024
+          ]
+        }
+      },
+      {
+        "check_id": "C-11",
+        "description": "Referential completeness DW.order_id -> WB.order_id",
+        "metric": "pct_present",
+        "value": 100.0,
+        "expected": "100%",
+        "status": "PASS",
+        "details": {
+          "n_dw_orders": 15921,
+          "n_present": 15921,
+          "pct_present": 100.0
+        }
+      },
+      {
+        "check_id": "C-12",
+        "description": "Referential completeness DR.courier_waybills -> WB.waybill_id",
+        "metric": "pct_present",
+        "value": 100.0,
+        "expected": "100%",
+        "status": "PASS",
+        "details": {
+          "n_ids": 125715,
+          "n_present": 125715,
+          "pct_present": 100.0,
+          "parse_failures": 0
+        }
+      },
+      {
+        "check_id": "C-13",
+        "description": "Referential completeness WV.order_ids -> WB.order_id",
+        "metric": "pct_present",
+        "value": 100.0,
+        "expected": "100%",
+        "status": "PASS",
+        "details": {
+          "n_ids": 568545,
+          "n_present": 568545,
+          "pct_present": 100.0,
+          "parse_failures": 0
+        }
+      },
+      {
+        "check_id": "C-14",
+        "description": "Cross-table coverage: WV/DR courier_id in WB.courier_id",
+        "metric": "pct_present",
+        "value": {
+          "wv_pct": 100.0,
+          "dr_pct": 100.0
+        },
+        "expected": "100%",
+        "status": "PASS",
+        "details": {
+          "wv_couriers": 4901,
+          "wv_present": 4901,
+          "dr_couriers": 4085,
+          "dr_present": 4085
+        }
+      }
+    ],
+    "validity": [
+      {
+        "check_id": "V-01",
+        "description": "dt domain: YYYYMMDD, 8 values, Oct 17-24 2022",
+        "metric": "distinct_days",
+        "value": [
+          20221017,
+          20221018,
+          20221019,
+          20221020,
+          20221021,
+          20221022,
+          20221023,
+          20221024
+        ],
+        "expected": "8 values Oct 17-24 2022",
+        "status": "PASS",
+        "details": {
+          "n_days": 8,
+          "valid_format": true,
+          "matches_expected": true
+        }
+      },
+      {
+        "check_id": "V-02",
+        "description": "Boolean domains: is_courier_grabbed/is_weekend/is_prebook in {0,1}",
+        "metric": "n_out_of_domain",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "bad_values": {}
+        }
+      },
+      {
+        "check_id": "V-03",
+        "description": "ID non-negativity across id columns",
+        "metric": "n_negative",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "negatives": {}
+        }
+      },
+      {
+        "check_id": "V-04",
+        "description": "Coordinate nonzero & bounds within global bbox +/- margin",
+        "metric": "n_out_of_box",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "out_of_box": {},
+          "margin": 50000,
+          "bbox": {
+            "lng_min": 174387310,
+            "lng_max": 174999535,
+            "lat_min": 45729124,
+            "lat_max": 46079853
+          }
+        }
+      },
+      {
+        "check_id": "V-05",
+        "description": "Coordinate pairing: lat==0 iff lng==0",
+        "metric": "n_mismatch",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "mismatches": {}
+        }
+      },
+      {
+        "check_id": "V-06",
+        "description": "Timestamp range within dt day +/- 1 day (prebook explains)",
+        "metric": "n_out_of_range",
+        "value": 251,
+        "expected": "0",
+        "status": "INFO",
+        "details": {
+          "out_of_range": {
+            "estimate_meal_prepare_time": 65,
+            "order_push_time": 65,
+            "platform_order_time": 121
+          },
+          "n_out_of_range_rows": 121,
+          "prebook_rate": 100.0,
+          "note": "advance-booking (prebook) explains out-of-range timestamps"
+        }
+      },
+      {
+        "check_id": "V-07",
+        "description": "Order timeline monotonicity (non-zero pairs only)",
+        "metric": "n_violations",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "per_pair": {
+            "platform_order_time->order_push_time": {
+              "evaluable_pairs": 654343,
+              "violations": 0,
+              "pct": 0.0
+            },
+            "order_push_time->dispatch_time": {
+              "evaluable_pairs": 654342,
+              "violations": 0,
+              "pct": 0.0
+            },
+            "dispatch_time->grab_time": {
+              "evaluable_pairs": 568545,
+              "violations": 0,
+              "pct": 0.0
+            },
+            "grab_time->fetch_time": {
+              "evaluable_pairs": 568546,
+              "violations": 0,
+              "pct": 0.0
+            },
+            "fetch_time->arrive_time": {
+              "evaluable_pairs": 568545,
+              "violations": 0,
+              "pct": 0.0
+            }
+          },
+          "total_evaluable_pairs": 3014321,
+          "total_violations": 0
+        }
+      },
+      {
+        "check_id": "V-08",
+        "description": "Pre-fetch vs meal-ready: fetch_time < estimate_meal_prepare_time",
+        "metric": "n_violations",
+        "value": 251255,
+        "expected": "allowed by spec (WARN/INFO)",
+        "status": "WARN",
+        "details": {
+          "n_evaluable": 558672,
+          "n_violations": 251255,
+          "pct": 44.973616,
+          "magnitude_seconds": {
+            "p50": 206.0,
+            "p90": 421.0,
+            "p99": 632.0
+          },
+          "max_seconds": 1700
+        }
+      },
+      {
+        "check_id": "V-09",
+        "description": "Wave time order: wave_start_time <= wave_end_time",
+        "metric": "n_violations",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_waves": 206748,
+          "n_violations": 0
+        }
+      },
+      {
+        "check_id": "V-10",
+        "description": "Dispatch grid alignment: dispatch_time divisible by 30",
+        "metric": "pct_div30",
+        "value": 0.0,
+        "expected": "batch cadence",
+        "status": "INFO",
+        "details": {
+          "n": 62044,
+          "n_div30": 0,
+          "pct_div30": 0.0,
+          "second_of_minute_dist": {
+            "6": 7672,
+            "7": 7911,
+            "10": 7798,
+            "12": 7970,
+            "13": 7875,
+            "14": 7631,
+            "17": 7577,
+            "19": 7610
+          }
+        }
+      },
+      {
+        "check_id": "V-11",
+        "description": "Order->waybill cardinality (>=1 waybill per order)",
+        "metric": "n_orders_multi_waybill",
+        "value": 57770,
+        "expected": "each order >=1 waybill",
+        "status": "PASS",
+        "details": {
+          "distribution": {
+            "min": 1,
+            "max": 17,
+            "mean": 1.1509059952932568,
+            "p50": 1.0,
+            "p90": 2.0,
+            "p99": 4.0
+          },
+          "n_orders": 568546,
+          "n_multi_waybill": 57770,
+          "pct_multi": 10.161007
+        }
+      },
+      {
+        "check_id": "V-12",
+        "description": "estimate_arrived_time sanity: non-zero and >= platform_order_time",
+        "metric": "n_violations",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_zero": 0,
+          "n_violations": 0,
+          "n_evaluable": 654343
+        }
+      }
+    ],
+    "consistency": [
+      {
+        "check_id": "S-01",
+        "description": "is_weekend vs dt calendar (Oct 22-23 weekend)",
+        "metric": "n_mismatch",
+        "value": 651,
+        "expected": "0",
+        "status": "WARN",
+        "details": {
+          "n_mismatch": 651,
+          "pct": 0.099489,
+          "per_day_flag_rate": {
+            "20221017": 0.002674,
+            "20221018": 5e-05,
+            "20221019": 3.8e-05,
+            "20221020": 0.0,
+            "20221021": 1.2e-05,
+            "20221022": 0.99723,
+            "20221023": 0.999899,
+            "20221024": 0.002333
+          },
+          "prebook_rate_of_mismatches": 91.551459,
+          "n_weekday_flagged": 396,
+          "n_weekend_unflagged": 255,
+          "note": "most mismatches are prebook rows whose platform_order_time calendar day differs from dt"
+        }
+      },
+      {
+        "check_id": "S-02",
+        "description": "is_courier_grabbed vs grab_time agreement",
+        "metric": "n_mismatch",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "grabbed1_grab0": 0,
+          "grabbed0_grab_nonzero": 0
+        }
+      },
+      {
+        "check_id": "S-03",
+        "description": "Wave start correctness vs recomputed min(grab_time)",
+        "metric": "pct_exact",
+        "value": 68.123513,
+        "expected": "100% (bug documented)",
+        "status": "WARN",
+        "details": {
+          "n_evaluable_waves": 206748,
+          "n_exact": 140844,
+          "n_mismatch": 65904,
+          "pct_exact": 68.123513,
+          "parse_failures": 0,
+          "mismatch_delta_seconds": {
+            "p50": 238.0,
+            "p90": 690.0,
+            "p99": 1346.9700000000012,
+            "max": 15692,
+            "min": 1,
+            "n_negative": 0
+          },
+          "note": "wave_start_time - recomputed_min_grab_time; direction is always >= 0"
+        }
+      },
+      {
+        "check_id": "S-04",
+        "description": "Wave end correctness vs recomputed max(arrive_time)",
+        "metric": "pct_exact",
+        "value": 100.0,
+        "expected": "100%",
+        "status": "PASS",
+        "details": {
+          "n_evaluable_waves": 206748,
+          "n_exact": 206748,
+          "n_mismatch": 0,
+          "pct_exact": 100.0
+        }
+      },
+      {
+        "check_id": "S-05",
+        "description": "Wave order set validity: ids exist, non-empty, len>=1",
+        "metric": "n_missing_ids",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_empty_lists": 0,
+          "n_missing_ids": 0,
+          "total_list_len": 568545,
+          "accepted_waybills": 568546,
+          "parse_failures": 0
+        }
+      },
+      {
+        "check_id": "S-06",
+        "description": "Wave date consistency: order dt == WV.dt",
+        "metric": "pct_mismatch",
+        "value": 0.008706,
+        "expected": "0%",
+        "status": "WARN",
+        "details": {
+          "n_evaluable_waves": 206748,
+          "n_mismatch": 18,
+          "pct_mismatch": 0.008706
+        }
+      },
+      {
+        "check_id": "S-07",
+        "description": "Courier-waybill ownership (order-vocabulary ids; field-naming ambiguity)",
+        "metric": "correct_match_pct",
+        "value": 99.554548,
+        "expected": "candidate-vs-assigned nuance",
+        "status": "INFO",
+        "details": {
+          "order_id_join_pct": 99.571252,
+          "waybill_id_join_pct": 0.454202,
+          "correct_match_pct": 99.554548,
+          "n_eval_order_join": 125715,
+          "n_eval_waybill_join": 125715,
+          "n_eval_correct": 125715,
+          "parse_failures": 0,
+          "note": "courier_waybills holds ORDER-vocabulary ids, not waybill ids; correct match requires accepted waybill for that order_id with courier_id == DR.courier_id and dispatch_time <= DR.dispatch_time"
+        }
+      },
+      {
+        "check_id": "S-08",
+        "description": "DR on-hand set vs WB: ids exist; empty = idle candidate",
+        "metric": "pct_present",
+        "value": 100.0,
+        "expected": "100%",
+        "status": "INFO",
+        "details": {
+          "n_empty_lists": 18667,
+          "pct_empty": 30.086713,
+          "n_ids": 125715,
+          "n_present": 125715,
+          "pct_present": 100.0,
+          "note": "empty courier_waybills list = idle candidate"
+        }
+      },
+      {
+        "check_id": "S-09",
+        "description": "DW order existence & integer type",
+        "metric": "n_bad_rows",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_not_in_wb": 0,
+          "n_non_integer": 0,
+          "n_rows": 15921
+        }
+      },
+      {
+        "check_id": "S-10",
+        "description": "Universe reconciliation vs published reference",
+        "metric": "deltas",
+        "value": {
+          "orders": {
+            "observed": 568546,
+            "reference": 568546,
+            "delta": 0
+          },
+          "couriers": {
+            "observed": 4954,
+            "reference": 4955,
+            "delta": -1
+          },
+          "merchants": {
+            "observed": 4961,
+            "reference": 4962,
+            "delta": -1
+          },
+          "districts": {
+            "observed": 22,
+            "reference": 23,
+            "delta": -1
+          },
+          "prebook_rate": {
+            "observed": 0.036845,
+            "reference": 0.039,
+            "delta": -0.002155
+          }
+        },
+        "expected": "match reference",
+        "status": "INFO",
+        "details": {
+          "deltas": {
+            "orders": {
+              "observed": 568546,
+              "reference": 568546,
+              "delta": 0
+            },
+            "couriers": {
+              "observed": 4954,
+              "reference": 4955,
+              "delta": -1
+            },
+            "merchants": {
+              "observed": 4961,
+              "reference": 4962,
+              "delta": -1
+            },
+            "districts": {
+              "observed": 22,
+              "reference": 23,
+              "delta": -1
+            },
+            "prebook_rate": {
+              "observed": 0.036845,
+              "reference": 0.039,
+              "delta": -0.002155
+            }
+          }
+        }
+      },
+      {
+        "check_id": "S-11",
+        "description": "Weekend share vs expectation (2/8 days)",
+        "metric": "pct_weekend",
+        "value": 27.227158,
+        "expected": "25%",
+        "status": "INFO",
+        "details": {
+          "weekend_rows": 178159,
+          "pct": 27.227158,
+          "expected_pct": 25.0
+        }
+      }
+    ],
+    "uniqueness": [
+      {
+        "check_id": "U-01",
+        "description": "waybill_id uniqueness in WB",
+        "metric": "n_duplicates",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_duplicates": 0,
+          "n_unique": 654343
+        }
+      },
+      {
+        "check_id": "U-02",
+        "description": "(dt, waybill_id) uniqueness",
+        "metric": "n_duplicates",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_duplicates": 0
+        }
+      },
+      {
+        "check_id": "U-03",
+        "description": "Full-row duplicates per table",
+        "metric": "n_duplicates",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "per_table": {
+            "WB": 0,
+            "WV": 0,
+            "DR": 0,
+            "DW": 0
+          }
+        }
+      },
+      {
+        "check_id": "U-04",
+        "description": "(dt, courier_id, wave_id) uniqueness in WV",
+        "metric": "n_duplicates",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_duplicates": 0
+        }
+      },
+      {
+        "check_id": "U-05",
+        "description": "(dt, dispatch_time, courier_id) uniqueness in DR",
+        "metric": "n_duplicates",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_duplicates": 0
+        }
+      },
+      {
+        "check_id": "U-06",
+        "description": "(dt, dispatch_time, order_id) uniqueness in DW",
+        "metric": "n_duplicates",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_duplicates": 0
+        }
+      },
+      {
+        "check_id": "U-07",
+        "description": "order_id cardinality: distinct orders vs rows",
+        "metric": "n_distinct_orders",
+        "value": 568546,
+        "expected": "1 order : 1..N waybills",
+        "status": "INFO",
+        "details": {
+          "n_orders": 568546,
+          "n_rows": 654343,
+          "n_multi_waybill": 57770,
+          "pct_multi": 10.161007,
+          "distribution": {
+            "min": 1,
+            "max": 17,
+            "mean": 1.1509059952932568
+          }
+        }
+      },
+      {
+        "check_id": "U-08",
+        "description": "Candidate duplication in DW (orders at >1 checkpoint)",
+        "metric": "n_multi_checkpoint",
+        "value": 0,
+        "expected": "expected for delayed assignment",
+        "status": "INFO",
+        "details": {
+          "n_orders": 15921,
+          "n_multi_checkpoint": 0,
+          "pct_multi": 0.0,
+          "max_checkpoints": 1
+        }
+      },
+      {
+        "check_id": "U-09",
+        "description": "Duplicate poi_id coords: same poi_id differing coords",
+        "metric": "n_poi_with_differing_coords",
+        "value": 97,
+        "expected": "0",
+        "status": "INFO",
+        "details": {
+          "n_poi": 4961,
+          "n_poi_with_differing_coords": 97
+        }
+      },
+      {
+        "check_id": "U-10",
+        "description": "Courier on same day in both WB and WV (join sanity)",
+        "metric": "n_common_day_courier_pairs",
+        "value": 28923,
+        "expected": "descriptive",
+        "status": "INFO",
+        "details": {
+          "wb_day_courier_pairs": 29314,
+          "wv_day_courier_pairs": 28923,
+          "both": 28923
+        }
+      }
+    ],
+    "timeliness": [
+      {
+        "check_id": "T-01",
+        "description": "Coverage window: min/max dt, span, distinct days",
+        "metric": "span_days",
+        "value": 8,
+        "expected": "8 days",
+        "status": "INFO",
+        "details": {
+          "min_dt": 20221017,
+          "max_dt": 20221024,
+          "span_days": 8,
+          "n_distinct_days": 8
+        }
+      },
+      {
+        "check_id": "T-02",
+        "description": "Gap check: no missing calendar day in window",
+        "metric": "n_missing_days",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "missing_days": []
+        }
+      },
+      {
+        "check_id": "T-03",
+        "description": "Snapshot age: latest timestamp vs generated_at",
+        "metric": "lag_days",
+        "value": 1439,
+        "expected": "flag staleness",
+        "status": "WARN",
+        "details": {
+          "latest_timestamp": 1666641420,
+          "latest_utc": "2022-10-24T19:57:00+00:00",
+          "generated_at": "2026-10-03T13:54:00.546396+00:00",
+          "lag_days": 1439,
+          "lag_years": 3.94
+        }
+      },
+      {
+        "check_id": "T-04",
+        "description": "Final-day truncation: per-day event span vs median",
+        "metric": "last_day_span_seconds",
+        "value": 554480,
+        "expected": "not truncated",
+        "status": "PASS",
+        "details": {
+          "per_day": {
+            "20221017": {
+              "span": 532530,
+              "rows": 77027
+            },
+            "20221018": {
+              "span": 568860,
+              "rows": 79932
+            },
+            "20221019": {
+              "span": 465359,
+              "rows": 78871
+            },
+            "20221020": {
+              "span": 569211,
+              "rows": 79179
+            },
+            "20221021": {
+              "span": 616362,
+              "rows": 83295
+            },
+            "20221022": {
+              "span": 668764,
+              "rows": 88813
+            },
+            "20221023": {
+              "span": 465718,
+              "rows": 89205
+            },
+            "20221024": {
+              "span": 554480,
+              "rows": 78021
+            }
+          },
+          "median_span": 561670.0,
+          "last_day": "20221024",
+          "last_span": 554480,
+          "truncated": false
+        }
+      },
+      {
+        "check_id": "T-05",
+        "description": "Event-time dispersion: min/max per timestamp, cross-midnight",
+        "metric": "n_cross_midnight",
+        "value": 185418,
+        "expected": "descriptive",
+        "status": "INFO",
+        "details": {
+          "per_column": {
+            "estimate_arrived_time": {
+              "min": 1665937540,
+              "max": 1666641420,
+              "n_cross_midnight": 20295
+            },
+            "dispatch_time": {
+              "min": 1665936048,
+              "max": 1666627966,
+              "n_cross_midnight": 24203
+            },
+            "grab_time": {
+              "min": 1665936060,
+              "max": 1666628609,
+              "n_cross_midnight": 22827
+            },
+            "fetch_time": {
+              "min": 1665936355,
+              "max": 1666629477,
+              "n_cross_midnight": 21567
+            },
+            "arrive_time": {
+              "min": 1665937032,
+              "max": 1666629978,
+              "n_cross_midnight": 20107
+            },
+            "estimate_meal_prepare_time": {
+              "min": 1665544699,
+              "max": 1666628312,
+              "n_cross_midnight": 23881
+            },
+            "order_push_time": {
+              "min": 1665544699,
+              "max": 1666627199,
+              "n_cross_midnight": 25935
+            },
+            "platform_order_time": {
+              "min": 1665494980,
+              "max": 1666627188,
+              "n_cross_midnight": 26603
+            }
+          },
+          "total_cross_midnight": 185418
+        }
+      },
+      {
+        "check_id": "T-06",
+        "description": "Latency profile: median/p90/p99 of adjacent diffs",
+        "metric": "latency_profile",
+        "value": {
+          "order_push_time-platform_order_time": {
+            "n_evaluable": 654343,
+            "median": 13.0,
+            "p90": 219.0,
+            "p99": 1082.0,
+            "n_negative": 0
+          },
+          "dispatch_time-order_push_time": {
+            "n_evaluable": 654342,
+            "median": 125.0,
+            "p90": 547.0,
+            "p99": 3696.5899999999674,
+            "n_negative": 0
+          },
+          "grab_time-dispatch_time": {
+            "n_evaluable": 568545,
+            "median": 11.0,
+            "p90": 42.0,
+            "p99": 292.0,
+            "n_negative": 0
+          },
+          "arrive_time-grab_time": {
+            "n_evaluable": 568545,
+            "median": 1451.0,
+            "p90": 2407.0,
+            "p99": 3379.0,
+            "n_negative": 0
+          }
+        },
+        "expected": "descriptive",
+        "status": "INFO",
+        "details": {
+          "latency_profile": {
+            "order_push_time-platform_order_time": {
+              "n_evaluable": 654343,
+              "median": 13.0,
+              "p90": 219.0,
+              "p99": 1082.0,
+              "n_negative": 0
+            },
+            "dispatch_time-order_push_time": {
+              "n_evaluable": 654342,
+              "median": 125.0,
+              "p90": 547.0,
+              "p99": 3696.5899999999674,
+              "n_negative": 0
+            },
+            "grab_time-dispatch_time": {
+              "n_evaluable": 568545,
+              "median": 11.0,
+              "p90": 42.0,
+              "p99": 292.0,
+              "n_negative": 0
+            },
+            "arrive_time-grab_time": {
+              "n_evaluable": 568545,
+              "median": 1451.0,
+              "p90": 2407.0,
+              "p99": 3379.0,
+              "n_negative": 0
+            }
+          }
+        }
+      },
+      {
+        "check_id": "T-07",
+        "description": "Timestamp resolution: all integer seconds",
+        "metric": "n_non_integer",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "non_integer": {}
+        }
+      }
+    ],
+    "accuracy": [
+      {
+        "check_id": "A-01",
+        "description": "Documented anomaly reproduction (a-e)",
+        "metric": "anomaly_rates",
+        "value": {
+          "a_rejected_zeroing_pct": 100.0,
+          "b_wave_start_mismatch_pct": 31.876487,
+          "c_dispatch_not_matched_pct": 99.993719,
+          "d_prefetch_pct": 44.973616,
+          "e_coords_shifted": true
+        },
+        "expected": "reproduce documented caveats",
+        "status": "INFO",
+        "details": {
+          "a": {
+            "pct": 100.0,
+            "expected": 100.0
+          },
+          "b": {
+            "pct": 31.876487,
+            "n_eval": 206748,
+            "n_mismatch": 65904
+          },
+          "c": {
+            "pct_matched": 0.006281,
+            "pct_not_matched": 99.993719,
+            "pct_within_300s": 93.813203,
+            "n_matched": 1,
+            "n_not_matched": 15920,
+            "n_within_300s": 14936,
+            "n_missing": 0,
+            "n_dw": 15921,
+            "documented": 0.0181,
+            "measured": "DW (dt, dispatch_time, order_id) matched against WB waybills for that order with dispatch_time == checkpoint; checkpoint is a batch time so exact equality is rare, within-300s is the meaningful conformance proxy"
+          },
+          "d": {
+            "pct": 44.973616,
+            "n": 251255
+          },
+          "e": {
+            "lng_min": 174481806,
+            "lat_min": 45755268,
+            "real_beijing": {
+              "lat": 39.9,
+              "lng": 116.4
+            }
+          }
+        }
+      },
+      {
+        "check_id": "A-02",
+        "description": "Negative durations across adjacent timestamp diffs",
+        "metric": "n_negative",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "per_pair": {
+            "order_push_time-platform_order_time": 0,
+            "dispatch_time-order_push_time": 0,
+            "grab_time-dispatch_time": 0,
+            "arrive_time-grab_time": 0
+          }
+        }
+      },
+      {
+        "check_id": "A-03",
+        "description": "Duration outliers: IQR bounds for key durations",
+        "metric": "outlier_stats",
+        "value": {
+          "arrive_time-grab_time": {
+            "n": 568545,
+            "q1": 1077.0,
+            "q3": 1915.0,
+            "iqr": 838.0,
+            "lower": -180.0,
+            "upper": 3172.0,
+            "n_outliers": 9598
+          },
+          "fetch_time-grab_time": {
+            "n": 568546,
+            "q1": 340.0,
+            "q3": 807.0,
+            "iqr": 467.0,
+            "lower": -360.5,
+            "upper": 1507.5,
+            "n_outliers": 15112
+          },
+          "dispatch_time-platform_order_time": {
+            "n": 654342,
+            "q1": 54.0,
+            "q3": 393.0,
+            "iqr": 339.0,
+            "lower": -454.5,
+            "upper": 901.5,
+            "n_outliers": 38301
+          },
+          "wave_duration": {
+            "n": 206748,
+            "q1": 1136.0,
+            "q3": 2561.0,
+            "iqr": 1425.0,
+            "lower": -1001.5,
+            "upper": 4698.5,
+            "n_outliers": 13818
+          }
+        },
+        "expected": "descriptive",
+        "status": "INFO",
+        "details": {
+          "outliers": {
+            "arrive_time-grab_time": {
+              "n": 568545,
+              "q1": 1077.0,
+              "q3": 1915.0,
+              "iqr": 838.0,
+              "lower": -180.0,
+              "upper": 3172.0,
+              "n_outliers": 9598
+            },
+            "fetch_time-grab_time": {
+              "n": 568546,
+              "q1": 340.0,
+              "q3": 807.0,
+              "iqr": 467.0,
+              "lower": -360.5,
+              "upper": 1507.5,
+              "n_outliers": 15112
+            },
+            "dispatch_time-platform_order_time": {
+              "n": 654342,
+              "q1": 54.0,
+              "q3": 393.0,
+              "iqr": 339.0,
+              "lower": -454.5,
+              "upper": 901.5,
+              "n_outliers": 38301
+            },
+            "wave_duration": {
+              "n": 206748,
+              "q1": 1136.0,
+              "q3": 2561.0,
+              "iqr": 1425.0,
+              "lower": -1001.5,
+              "upper": 4698.5,
+              "n_outliers": 13818
+            }
+          },
+          "n_extreme_arrive_grab": 569,
+          "p999_arrive_grab": 4422.456000000006
+        }
+      },
+      {
+        "check_id": "A-04",
+        "description": "On-time delivery rate: arrive_time <= estimate_arrived_time",
+        "metric": "pct_on_time",
+        "value": 84.991865,
+        "expected": "majority on-time",
+        "status": "INFO",
+        "details": {
+          "n_evaluable": 568545,
+          "n_on_time": 483217,
+          "pct_on_time": 84.991865,
+          "diff_distribution": {
+            "p50": -488.0,
+            "p90": 120.0,
+            "p99": 769.0
+          },
+          "n_late": 85328
+        }
+      },
+      {
+        "check_id": "A-05",
+        "description": "Geodesic/implied-speed check (haversine, >120 km/h flag)",
+        "metric": "n_impossible_speed",
+        "value": 0,
+        "expected": "0",
+        "status": "WARN",
+        "details": {
+          "n_evaluable": 568545,
+          "n_impossible_speed_gt120": 0,
+          "pct_impossible": 0.0,
+          "n_zero_distance_with_time": 7,
+          "distance_km": {
+            "p50": 1.4685809334193112,
+            "p90": 2.7958711456202465,
+            "p99": 4.985988784414345
+          },
+          "speed_kmh": {
+            "p50": 6.32260794824548,
+            "p90": 11.676270399715067,
+            "p99": 17.059489623397127
+          }
+        }
+      },
+      {
+        "check_id": "A-06",
+        "description": "Courier-at-pickup proximity (grab vs sender, >5km flag)",
+        "metric": "n_gt_5km",
+        "value": 38,
+        "expected": "0",
+        "status": "WARN",
+        "details": {
+          "n_evaluable": 568546,
+          "n_gt_5km": 38,
+          "pct_gt_5km": 0.006684,
+          "distance_km": {
+            "p50": 0.4742943348791167,
+            "p90": 1.2845673307116157,
+            "p99": 2.4613209720890237
+          },
+          "max_km": 19.63474070816459
+        }
+      },
+      {
+        "check_id": "A-07",
+        "description": "Meal-prep plausibility vs platform_order_time",
+        "metric": "n_impossible",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_evaluable": 644436,
+          "n_impossible_before_order": 0,
+          "horizon_seconds": {
+            "p50": 736.0,
+            "p90": 1099.0,
+            "p99": 1575.0
+          },
+          "median_minutes": 12.266666666666667,
+          "p90_minutes": 18.316666666666666
+        }
+      },
+      {
+        "check_id": "A-08",
+        "description": "Precision/scale: coords micro-degrees, times seconds",
+        "metric": "scale_ok",
+        "value": {
+          "coords_microdeg": true,
+          "times_seconds": true
+        },
+        "expected": "coords>1e6, times<1e11",
+        "status": "PASS",
+        "details": {
+          "coord_bad": {},
+          "ts_bad": {}
+        }
+      },
+      {
+        "check_id": "A-09",
+        "description": "Cross-field business rule: prebook lead time",
+        "metric": "n_prebook_lead_gt_1h",
+        "value": 1709,
+        "expected": "descriptive",
+        "status": "INFO",
+        "details": {
+          "n_prebook": 24109,
+          "n_lead_gt_1h": 1709,
+          "pct_lead_gt_1h": 7.088639,
+          "lead_seconds": {
+            "p50": 14.0,
+            "p90": 1629.2000000000007,
+            "p99": 48157.83999999982
+          }
+        }
+      },
+      {
+        "check_id": "A-10",
+        "description": "Internal reference consistency: courier counts WB/WV/DR",
+        "metric": "courier_counts",
+        "value": {
+          "wb": 4954,
+          "wv": 4901,
+          "dr": 4085
+        },
+        "expected": "reconcile with reference",
+        "status": "INFO",
+        "details": {
+          "wb_couriers": 4954,
+          "wv_couriers": 4901,
+          "dr_couriers": 4085,
+          "wv_not_wb": 1,
+          "dr_not_wb": 0,
+          "reference_couriers": 4955,
+          "reference_rejected_couriers": 54
+        }
+      },
+      {
+        "check_id": "A-11",
+        "description": "Distributional plausibility: daily volume stability & wave duration",
+        "metric": "daily_volume_cov",
+        "value": 0.05886126398379081,
+        "expected": "stable",
+        "status": "INFO",
+        "details": {
+          "daily_volume": {
+            "20221017": 77027,
+            "20221018": 79932,
+            "20221019": 78871,
+            "20221020": 79179,
+            "20221021": 83295,
+            "20221022": 88813,
+            "20221023": 89205,
+            "20221024": 78021
+          },
+          "min": 77027,
+          "max": 89205,
+          "cov": 0.058861,
+          "wave_duration_seconds": {
+            "p50": 1685.0,
+            "p90": 3922.0,
+            "p99": 8488.059999999998
+          }
+        }
+      },
+      {
+        "check_id": "A-12",
+        "description": "Impossible coordinate == 0 for accepted waybills",
+        "metric": "n_zero_coord_accepted",
+        "value": 0,
+        "expected": "0",
+        "status": "PASS",
+        "details": {
+          "n_accepted_with_zero_grab_coord": 0,
+          "n_accepted": 568546
+        }
+      }
+    ]
+  },
+  "summary": {
+    "1_completeness": {
+      "n_pass": 7,
+      "n_warn": 1,
+      "n_fail": 1,
+      "n_info": 5,
+      "n_error": 0
+    },
+    "2_validity": {
+      "n_pass": 9,
+      "n_warn": 1,
+      "n_fail": 0,
+      "n_info": 2,
+      "n_error": 0
+    },
+    "3_consistency": {
+      "n_pass": 4,
+      "n_warn": 3,
+      "n_fail": 0,
+      "n_info": 4,
+      "n_error": 0
+    },
+    "4_uniqueness": {
+      "n_pass": 6,
+      "n_warn": 0,
+      "n_fail": 0,
+      "n_info": 4,
+      "n_error": 0
+    },
+    "5_timeliness": {
+      "n_pass": 3,
+      "n_warn": 1,
+      "n_fail": 0,
+      "n_info": 3,
+      "n_error": 0
+    },
+    "6_accuracy": {
+      "n_pass": 4,
+      "n_warn": 2,
+      "n_fail": 0,
+      "n_info": 6,
+      "n_error": 0
+    }
+  }
+}
