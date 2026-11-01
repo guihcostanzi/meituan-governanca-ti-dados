@@ -48,7 +48,6 @@ from meituan_eta.tracking import DEFAULT_EXPERIMENT_NAME, init_tracking, log_dat
 BASELINE_RUN_NAME = "baseline-meituan"
 BASELINE_MODEL = "baseline_meituan"
 BASELINE_STAGE = "reference"
-TEST_DATASET_SOURCE = "data/processed/test.parquet"
 
 REGISTRY_COLUMNS: tuple[str, ...] = (
     "run_id",
@@ -216,7 +215,7 @@ def _find_baseline_run_id(experiment_id: str) -> str | None:
     return str(frame.iloc[0]["run_id"])
 
 
-def _log_baseline(test_df: pd.DataFrame) -> dict[str, float]:
+def _log_baseline(test_df: pd.DataFrame, test_path: Path) -> dict[str, float]:
     """Log the test dataset and the four metrics of the official Meituan estimate."""
     scores = _score(test_df[TARGET_COL], test_df[BASELINE_COL])
     # MLflow's local source resolver warns that a relative path is ambiguous; the
@@ -234,7 +233,7 @@ def _log_baseline(test_df: pd.DataFrame) -> dict[str, float]:
             "ignore",
             message="Starting with pandas version 4.0 all arguments of all will be keyword-only",
         )
-        log_dataset(test_df, TEST_DATASET_SOURCE, "test", TARGET_COL, "testing")
+        log_dataset(test_df, str(test_path), "test", TARGET_COL, "testing")
     mlflow.log_metrics({f"test_{name}": value for name, value in scores.items()})
     mlflow.log_params(
         {
@@ -247,17 +246,17 @@ def _log_baseline(test_df: pd.DataFrame) -> dict[str, float]:
 
 
 def _ensure_baseline(
-    test_df: pd.DataFrame, experiment_id: str
+    test_df: pd.DataFrame, experiment_id: str, test_path: Path
 ) -> tuple[str, dict[str, float]]:
     """Create the baseline run once, then always reuse it on later executions."""
     run_id = _find_baseline_run_id(experiment_id)
     if run_id is None:
         with mlflow.start_run(run_name=BASELINE_RUN_NAME) as run:
-            scores = _log_baseline(test_df)
+            scores = _log_baseline(test_df, test_path)
             run_id = run.info.run_id
     else:
         with mlflow.start_run(run_id=run_id):
-            scores = _log_baseline(test_df)
+            scores = _log_baseline(test_df, test_path)
     return run_id, scores
 
 
@@ -446,7 +445,7 @@ def main() -> int:
         )
 
     baseline_run_id, baseline_scores = _ensure_baseline(
-        test_df, experiment.experiment_id
+        test_df, experiment.experiment_id, test_path
     )
     metrics["baseline/meituan"] = baseline_scores
     print(
