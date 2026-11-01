@@ -31,23 +31,37 @@ running any command below, or call `.venv/bin/python` directly.
 
 The challenge files are **not redistributed with this repository**. They are released
 under CC BY-NC 4.0 and the licence (`License.txt`) forbids redistribution, so they must
-be obtained from the challenge distribution and placed either in `data/` or at the
-repository root before the pipeline can run. The bootstrap stage copies them into
-`data/raw/`, which is the canonical location the later stages read.
-
-The large waybill table may stay zipped. `bootstrap` unzips
-`all_waybill_info_meituan_0322.csv.zip` when the uncompressed CSV is absent. The expected
-filenames are:
+be obtained from the challenge distribution. `dvc repro` requires exactly four files
+under `data/`, because DVC validates every dependency declared in `dvc.yaml` before it
+runs any stage and aborts up front if one is missing. The expected layout is:
 
 | File | Notes |
 | --- | --- |
-| `all_waybill_info_meituan_0322.csv` | May instead be present as `all_waybill_info_meituan_0322.csv.zip` |
-| `courier_wave_info_meituan.csv` | Required |
-| `dispatch_rider_meituan.csv` | Required |
-| `dispatch_waybill_meituan.csv` | Required |
+| `data/all_waybill_info_meituan_0322.csv.zip` | Required by `dvc repro` as the zipped archive; the uncompressed CSV is only a fallback for a manual bootstrap |
+| `data/courier_wave_info_meituan.csv` | Required |
+| `data/dispatch_rider_meituan.csv` | Required |
+| `data/dispatch_waybill_meituan.csv` | Required |
 
-`bootstrap` searches `data/raw/`, then `data/`, then the repository root. It never moves
-or rewrites the originals and it fails with an explicit message when a file is missing.
+Verify the layout before running the pipeline from the repository root:
+
+```bash
+ls data/all_waybill_info_meituan_0322.csv.zip data/courier_wave_info_meituan.csv data/dispatch_rider_meituan.csv data/dispatch_waybill_meituan.csv
+```
+
+The bootstrap stage copies these into `data/raw/`, which is the canonical location the
+later stages read. It never moves or rewrites the originals and it fails with an
+explicit message when a file is missing.
+
+A manual bootstrap is more permissive than `dvc repro`:
+`python -m meituan_eta.data.bootstrap --out-dir data/raw` also accepts the uncompressed
+`all_waybill_info_meituan_0322.csv` or files at the repository root, because the module
+searches `data/raw/`, then `data/`, then the repository root. Those locations do not
+satisfy DVC's declared dependencies, so `dvc repro` still refuses to run. If you only
+have the uncompressed CSV, create the archive first:
+
+```bash
+zip -j data/all_waybill_info_meituan_0322.csv.zip data/all_waybill_info_meituan_0322.csv
+```
 
 The raw files and every derived dataset are gitignored. Do not commit them.
 
@@ -59,11 +73,14 @@ Run the whole pipeline from the repository root:
 dvc repro
 ```
 
-`dvc repro` executes the linear chain `bootstrap → validate → prepare → features → split
-→ train → evaluate` and caches each stage. The DVC remote is a local directory outside
-the repository (`../meituan-dvc-remote`), because the licence forbids uploading the data
-anywhere. `dvc repro` works without any remote push; the remote only exists for local
-cache sharing.
+`dvc repro` executes the chain `bootstrap → validate → prepare → features → split →
+train → evaluate` and caches each stage. `dvc dag` also shows two shortcut edges —
+`bootstrap → features` (the features stage reads the materialised wave file) and
+`split → evaluate` (evaluate reads the test split) — so the graph is a DAG, not a bare
+line. The DVC remote is a local directory outside the repository, configured as
+`../../meituan-dvc-remote` relative to `.dvc/` (that is, `../meituan-dvc-remote` from the
+repository root), because the licence forbids uploading the data anywhere. `dvc repro`
+works without any remote push; the remote only exists for local cache sharing.
 
 The same stages can be run individually, in order:
 
