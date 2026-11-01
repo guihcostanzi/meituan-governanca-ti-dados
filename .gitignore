@@ -1,0 +1,34 @@
+# Environment
+.venv/
+
+# macOS metadata
+__MACOSX/
+
+# Agent workspace
+.omo/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# MLflow tracking store (no trailing slash: also ignores a not-yet-created store path)
+mlruns
+mlartifacts
+mlflow.db*
+
+# Trained model artefacts
+models/
+
+# Generated reports (registry .md/.csv stay tracked)
+reports/*.json
+reports/plots/
+
+# Data — derived/interim/raw artefacts are never committed, but data/ itself is tracked
+data/raw/
+data/interim/
+data/processed/
+data/*.csv
+data/*.zip
+
+# Python bytecode
+__pycache__/
+*.pyc
