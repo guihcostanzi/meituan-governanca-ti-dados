@@ -1,0 +1,94 @@
+stages:
+  bootstrap:
+    cmd: python -m meituan_eta.data.bootstrap --out-dir data/raw
+    deps:
+      - meituan_eta/data/bootstrap.py
+      - meituan_eta/config.py
+      - data/all_waybill_info_meituan_0322.csv.zip
+      - data/courier_wave_info_meituan.csv
+      - data/dispatch_rider_meituan.csv
+      - data/dispatch_waybill_meituan.csv
+    outs:
+      - data/raw
+  validate:
+    cmd: python -m meituan_eta.data.validate --waybill data/raw/all_waybill_info_meituan_0322.csv --waves data/raw/courier_wave_info_meituan.csv --out data/interim/validated.parquet --report reports/validation.json
+    deps:
+      - meituan_eta/data/validate.py
+      - meituan_eta/config.py
+      - data/raw/all_waybill_info_meituan_0322.csv
+      - data/raw/courier_wave_info_meituan.csv
+    outs:
+      - data/interim/validated.parquet
+  prepare:
+    cmd: python -m meituan_eta.data.prepare --input data/interim/validated.parquet --out data/interim/clean.parquet --report reports/prepare.json
+    deps:
+      - meituan_eta/data/prepare.py
+      - meituan_eta/config.py
+      - data/interim/validated.parquet
+    params:
+      - clean.min_total_time_min
+      - clean.max_total_time_min
+    outs:
+      - data/interim/clean.parquet
+  features:
+    cmd: python -m meituan_eta.features.build --input data/interim/clean.parquet --waves data/raw/courier_wave_info_meituan.csv --out data/processed/features.parquet --report reports/features.json
+    deps:
+      - meituan_eta/features/build.py
+      - meituan_eta/config.py
+      - data/interim/clean.parquet
+      - data/raw/courier_wave_info_meituan.csv
+    params:
+      - seed
+      - features.target_encoding_smoothing
+      - features.target_encoding_folds
+      - features.demand_window_seconds
+    outs:
+      - data/processed/features.parquet
+  split:
+    cmd: python -m meituan_eta.data.split --input data/processed/features.parquet --out-dir data/processed --report reports/split.json
+    deps:
+      - meituan_eta/data/split.py
+      - meituan_eta/config.py
+      - data/processed/features.parquet
+    params:
+      - seed
+      - split.max_samples
+      - split.test_size
+      - split.val_fraction_of_rest
+    outs:
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+      - data/processed/test.parquet
+  train:
+    cmd: python -m meituan_eta.train --train data/processed/train.parquet --val data/processed/val.parquet --models-dir models --runs reports/runs.json
+    deps:
+      - meituan_eta/train.py
+      - meituan_eta/config.py
+      - meituan_eta/models.py
+      - meituan_eta/tracking.py
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+    params:
+      - seed
+      - models
+      - mlflow
+    outs:
+      - models
+      - reports/runs.json
+  evaluate:
+    cmd: python -m meituan_eta.evaluate --test data/processed/test.parquet --models-dir models --runs reports/runs.json --metrics reports/metrics.json --registry reports/experiment_registry.md --registry-csv reports/experiment_registry.csv
+    deps:
+      - meituan_eta/evaluate.py
+      - meituan_eta/config.py
+      - meituan_eta/models.py
+      - meituan_eta/tracking.py
+      - models
+      - reports/runs.json
+      - data/processed/test.parquet
+    params:
+      - mlflow
+    metrics:
+      - reports/metrics.json
+    outs:
+      - reports/experiment_registry.md
+      - reports/experiment_registry.csv

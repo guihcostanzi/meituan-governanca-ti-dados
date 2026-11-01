@@ -1,0 +1,275 @@
+schema: '2.0'
+stages:
+  bootstrap:
+    cmd: python -m meituan_eta.data.bootstrap --out-dir data/raw
+    deps:
+    - path: data/all_waybill_info_meituan_0322.csv.zip
+      hash: md5
+      md5: eb647d2297ae6818ef05fb3ad71ab12f
+      size: 38763754
+    - path: data/courier_wave_info_meituan.csv
+      hash: md5
+      md5: da23c188d094f75acd15ee36c897f0ec
+      size: 12713132
+    - path: data/dispatch_rider_meituan.csv
+      hash: md5
+      md5: 3d719442ee71cdabb38dcc6cf0db6412
+      size: 4218198
+    - path: data/dispatch_waybill_meituan.csv
+      hash: md5
+      md5: fc44338657c2a92db54bb2041a5ed050
+      size: 510861
+    - path: meituan_eta/config.py
+      hash: md5
+      md5: 05a2e808295d7f1d08a01260021744ec
+      size: 3103
+    - path: meituan_eta/data/bootstrap.py
+      hash: md5
+      md5: 4d653bb3cfb8d3659c1f9256bf6c0a57
+      size: 4107
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: c70d864a6d9ada15270694a647107d24.dir
+      size: 139140592
+      nfiles: 4
+  validate:
+    cmd: python -m meituan_eta.data.validate --waybill 
+      data/raw/all_waybill_info_meituan_0322.csv --waves 
+      data/raw/courier_wave_info_meituan.csv --out 
+      data/interim/validated.parquet --report reports/validation.json
+    deps:
+    - path: data/raw/all_waybill_info_meituan_0322.csv
+      hash: md5
+      md5: 2ec71ba7efe1467815c139c7cc5af03a
+      size: 121698401
+    - path: data/raw/courier_wave_info_meituan.csv
+      hash: md5
+      md5: da23c188d094f75acd15ee36c897f0ec
+      size: 12713132
+    - path: meituan_eta/config.py
+      hash: md5
+      md5: 05a2e808295d7f1d08a01260021744ec
+      size: 3103
+    - path: meituan_eta/data/validate.py
+      hash: md5
+      md5: c6da5eb358efa7e60390ad83d679cfb6
+      size: 6465
+    outs:
+    - path: data/interim/validated.parquet
+      hash: md5
+      md5: 864fdf754fa00ca0d946a84db5f93bd1
+      size: 40857395
+  prepare:
+    cmd: python -m meituan_eta.data.prepare --input 
+      data/interim/validated.parquet --out data/interim/clean.parquet --report 
+      reports/prepare.json
+    deps:
+    - path: data/interim/validated.parquet
+      hash: md5
+      md5: 864fdf754fa00ca0d946a84db5f93bd1
+      size: 40857395
+    - path: meituan_eta/config.py
+      hash: md5
+      md5: 05a2e808295d7f1d08a01260021744ec
+      size: 3103
+    - path: meituan_eta/data/prepare.py
+      hash: md5
+      md5: d1563516bcc38071a037a636cddfb926
+      size: 8057
+    params:
+      params.yaml:
+        clean.max_total_time_min: 90.0
+        clean.min_total_time_min: 5.0
+    outs:
+    - path: data/interim/clean.parquet
+      hash: md5
+      md5: 79ad18ea719cd8ac53a314c332982c90
+      size: 37668308
+  features:
+    cmd: python -m meituan_eta.features.build --input data/interim/clean.parquet
+      --waves data/raw/courier_wave_info_meituan.csv --out 
+      data/processed/features.parquet --report reports/features.json
+    deps:
+    - path: data/interim/clean.parquet
+      hash: md5
+      md5: 79ad18ea719cd8ac53a314c332982c90
+      size: 37668308
+    - path: data/raw/courier_wave_info_meituan.csv
+      hash: md5
+      md5: da23c188d094f75acd15ee36c897f0ec
+      size: 12713132
+    - path: meituan_eta/config.py
+      hash: md5
+      md5: 05a2e808295d7f1d08a01260021744ec
+      size: 3103
+    - path: meituan_eta/features/build.py
+      hash: md5
+      md5: ff57f91461d2a664a8c94d17d8407201
+      size: 11335
+    params:
+      params.yaml:
+        features.demand_window_seconds: 1200
+        features.target_encoding_folds: 5
+        features.target_encoding_smoothing: 10
+        seed: 42
+    outs:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 4a5747c26b390df213830f0a7fa997d0
+      size: 56356139
+  split:
+    cmd: python -m meituan_eta.data.split --input 
+      data/processed/features.parquet --out-dir data/processed --report 
+      reports/split.json
+    deps:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 4a5747c26b390df213830f0a7fa997d0
+      size: 56356139
+    - path: meituan_eta/config.py
+      hash: md5
+      md5: 05a2e808295d7f1d08a01260021744ec
+      size: 3103
+    - path: meituan_eta/data/split.py
+      hash: md5
+      md5: 32662181ba9a43db30447a02be9905f6
+      size: 4882
+    params:
+      params.yaml:
+        seed: 42
+        split.max_samples: 500000
+        split.test_size: 0.3
+        split.val_fraction_of_rest: 0.3333333333333333
+    outs:
+    - path: data/processed/test.parquet
+      hash: md5
+      md5: ead67b22e79ebe14bd81a08fa61ac4e1
+      size: 2915234
+    - path: data/processed/train.parquet
+      hash: md5
+      md5: 787361e823ee9ca17a2b07897b6c1876
+      size: 17842659
+    - path: data/processed/val.parquet
+      hash: md5
+      md5: aa52d5fb3083eca2e6fd2954f0fff320
+      size: 5690882
+  train:
+    cmd: python -m meituan_eta.train --train data/processed/train.parquet --val 
+      data/processed/val.parquet --models-dir models --runs reports/runs.json
+    deps:
+    - path: data/processed/train.parquet
+      hash: md5
+      md5: 787361e823ee9ca17a2b07897b6c1876
+      size: 17842659
+    - path: data/processed/val.parquet
+      hash: md5
+      md5: aa52d5fb3083eca2e6fd2954f0fff320
+      size: 5690882
+    - path: meituan_eta/config.py
+      hash: md5
+      md5: 05a2e808295d7f1d08a01260021744ec
+      size: 3103
+    - path: meituan_eta/models.py
+      hash: md5
+      md5: 28dc983f1ceb65a66a59faec22db90ff
+      size: 3934
+    - path: meituan_eta/tracking.py
+      hash: md5
+      md5: a84046f55c4834ab7236464da3add59d
+      size: 3979
+    - path: meituan_eta/train.py
+      hash: md5
+      md5: 76b0594e2484a16e89dff6117bbf8cef
+      size: 8676
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: meituan-eta
+          tracking_uri: sqlite:///mlflow.db
+        models:
+          random_forest:
+            n_estimators: 100
+            reduced:
+              max_depth: 16
+              min_samples_split: 10
+            complete:
+              max_depth: 18
+              min_samples_split: 8
+          hist_gradient_boosting:
+            max_iter: 500
+            learning_rate: 0.08
+            max_leaf_nodes: 31
+            early_stopping: true
+            validation_fraction: 0.15
+            n_iter_no_change: 20
+          lightgbm:
+            n_estimators:
+              reduced: 300
+              complete: 350
+            learning_rate: 0.05
+            num_leaves: 31
+        seed: 42
+    outs:
+    - path: models
+      hash: md5
+      md5: 42f3f8eb9f03e4e3e35c5f8b737da60a.dir
+      size: 511343592
+      nfiles: 6
+    - path: reports/runs.json
+      hash: md5
+      md5: 72ee2b49d9f545b372424f41d4d580a1
+      size: 1441
+  evaluate:
+    cmd: python -m meituan_eta.evaluate --test data/processed/test.parquet 
+      --models-dir models --runs reports/runs.json --metrics 
+      reports/metrics.json --registry reports/experiment_registry.md 
+      --registry-csv reports/experiment_registry.csv
+    deps:
+    - path: data/processed/test.parquet
+      hash: md5
+      md5: ead67b22e79ebe14bd81a08fa61ac4e1
+      size: 2915234
+    - path: meituan_eta/config.py
+      hash: md5
+      md5: 05a2e808295d7f1d08a01260021744ec
+      size: 3103
+    - path: meituan_eta/evaluate.py
+      hash: md5
+      md5: 1ba8ffd60025f03628cf311f0c9b6cb4
+      size: 16811
+    - path: meituan_eta/models.py
+      hash: md5
+      md5: 28dc983f1ceb65a66a59faec22db90ff
+      size: 3934
+    - path: meituan_eta/tracking.py
+      hash: md5
+      md5: a84046f55c4834ab7236464da3add59d
+      size: 3979
+    - path: models
+      hash: md5
+      md5: 42f3f8eb9f03e4e3e35c5f8b737da60a.dir
+      size: 511343592
+      nfiles: 6
+    - path: reports/runs.json
+      hash: md5
+      md5: 72ee2b49d9f545b372424f41d4d580a1
+      size: 1441
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: meituan-eta
+          tracking_uri: sqlite:///mlflow.db
+    outs:
+    - path: reports/experiment_registry.csv
+      hash: md5
+      md5: 952f24eb3c29ce0ee37f1f652b0df27a
+      size: 1852
+    - path: reports/experiment_registry.md
+      hash: md5
+      md5: 89fdff3e7d2a348427a2adc8b21e319f
+      size: 1998
+    - path: reports/metrics.json
+      hash: md5
+      md5: eaa1f305a74f9212006ffc231c1c653b
+      size: 1238
