@@ -164,6 +164,15 @@ The CSV columns are `run_id, data_version, model, stage, parameters, mae, mse, r
 execution_date`. `data_version` is the content hash of the dataset the run consumed.
 Both files are committed; the MLflow store itself is not.
 
+## Model card
+
+The Etapa 4 model card (in Portuguese) for the six trained configurations and the official
+baseline is [`docs/model_cards/MODEL_CARD.md`](docs/model_cards/MODEL_CARD.md). It
+documents the objective, data and population, metrics, limitations, recommended and
+non-recommended uses, risks, ethical aspects, model owner and a monitoring proposal. The
+model metrics are tied to MLflow run IDs, and the card states the known target-encoding
+leakage explicitly.
+
 ## Stage mapping
 
 The assignment names six stages. This repository splits them across seven DVC stages,
