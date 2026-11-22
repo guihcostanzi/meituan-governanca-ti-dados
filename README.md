@@ -12,6 +12,19 @@ the licence:
 
 > This research was supported by data provided by Meituan.
 
+## Entrega final (Etapa 4) — onde está cada item
+
+| Item pedido | Onde está |
+| --- | --- |
+| 1. Repositório da solução | Este repositório: código em `meituan_eta/`, pipeline em `dvc.yaml`, testes da rodada 2 em `notebooks/`; instruções de reprodução abaixo |
+| 2. Dataset documentado | `docs/final/relatorio_final/relatorio_final.pdf` (seção 3 e apêndice A, dicionário de dados); `quality/`; relatório da Etapa 2 em `docs/submitted_reports/` |
+| 3. Registro dos experimentos | MLflow (`mlflow.db`), `reports/experiment_registry.csv` e `.md`, `reports/relatorio_tabpfn_v2_100k.pdf` |
+| 4. Model card | `docs/model_cards/MODEL_CARD.md` |
+| 5. Plano de monitoramento | Relatório final, seção 6 (indicador, limite e ação, com simulação de dados novos) |
+| 6. Matriz de riscos | Relatório final, seção 7 |
+| 7. Relatório executivo | Relatório final, seções 1 e 8 (`docs/final/relatorio_final/relatorio_final.tex` e `.pdf`) |
+| Apresentação | `docs/final/apresentacao/apresentacao_final.html` (abrir no navegador; setas ← → para navegar) |
+
 ## Prerequisites
 
 Python 3.12 is the supported interpreter. Create an isolated environment and install the

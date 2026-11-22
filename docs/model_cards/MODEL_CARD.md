@@ -1,16 +1,31 @@
 # Model Card — Previsão de Tempo Total de Entrega (Meituan ETA)
 
 > **Status:** experimental / benchmark. **Não aprovado para uso em produção.**
-> **Versão do card:** 1.0 — 2026-11-21.
-> **Fonte de verdade dos números:** MLflow local em `http://localhost:5001`, experimento
-> `meituan-eta` (`experiment_id=1`). Este documento é uma fotografia das execuções
-> registradas; se houver divergência, o MLflow prevalece.
+> **Versão do card:** 1.1 — 2026-11-22 (inclui os experimentos com TabPFN e LightGBM com features extras).
+> **Fonte de verdade dos números:** para a rodada 1 (pipeline DVC), MLflow local em
+> `http://localhost:5001`, experimento `meituan-eta` (`experiment_id=1`). Para a rodada 2
+> (TabPFN e LightGBM com features extras, Google Colab), os manifestos de auditoria
+> (`*_audit.json`) e o relatório `reports/relatorio_tabpfn_v2_100k.pdf`. Se houver
+> divergência, a fonte original prevalece.
 
-Este Model Card cobre as **seis configurações de modelo** produzidas na Etapa 3
-(três algoritmos × dois estágios de features) e a execução de referência
-`baseline-meituan`. Ele foi escrito para atender aos itens pedidos na Etapa 4:
+Este Model Card cobre duas rodadas de experimentos:
+
+- **Rodada 1 (Etapa 3, pipeline DVC + MLflow):** seis configurações (Random Forest,
+  Histogram Gradient Boosting e LightGBM × dois estágios de features) e a execução de
+  referência `baseline-meituan`.
+- **Rodada 2 (experimentos avançados):** dataloader com encodings calculados **depois** do
+  split (sem o vazamento da rodada 1), 13 features extras de dinâmica de restaurante,
+  distrito e entregador, e comparação entre Random Forest, LightGBM, TabPFN-3.5 e um blend
+  TabPFN + LightGBM (seção 2.5). Ele foi escrito para atender aos itens pedidos na Etapa 4:
 objetivo, dados, população/contexto, métricas, limitações, usos recomendados, usos não
 recomendados, riscos, aspectos éticos e responsável pelo modelo.
+
+**Síntese:** este modelo estima quantos minutos um pedido de delivery leva
+para chegar. O erro médio é de cerca de 5 minutos, contra 9,5 minutos da estimativa atual
+do aplicativo. Foi desenvolvido com 8 dias de dados de uma cidade, destina-se a apoiar analistas e o
+planejamento, e não deve ser usado sozinho para prometer prazos nem para avaliar
+entregadores. O plano de monitoramento final e a matriz de riscos estão no relatório final
+(`docs/final/relatorio_final/relatorio_final.pdf`).
 
 ---
 
@@ -19,13 +34,14 @@ recomendados, riscos, aspectos éticos e responsável pelo modelo.
 | Pergunta | Resposta curta |
 | --- | --- |
 | O que o modelo faz? | Estima, em minutos, o tempo total entre a criação de um pedido de delivery e a chegada ao cliente. |
-| Qual é o melhor resultado? | `hist_gradient_boosting-complete`: MAE de teste **5,464 min**, RMSE **7,040 min**, R² **0,641**; MAE **42,5%** menor que o MAE da estimativa oficial da Meituan no mesmo split. |
-| Qual configuração usar em cada momento? | `hist_gradient_boosting-reduced` no checkout (antes de haver entregador) e `hist_gradient_boosting-complete` no despacho/aceite. |
-| Qual é a limitação mais séria? | O `poi_target_enc` foi calculado fora da dobra, mas **antes** do split train/test; por isso as métricas de teste são otimistas. |
-| Pode definir a promessa ao cliente? | **Não diretamente.** O modelo é uma previsão pontual e não calibrada para nível de serviço; uma promessa exige margem/quantil superior e backtest. |
-| Pode avaliar entregadores? | **Não.** O alvo mede o sistema de entrega, não o desempenho individual; há confundimento por distrito, loja, clima e oferta. |
+| Qual é o melhor resultado? | Rodada 2: blend 0,80 TabPFN + 0,20 LightGBM, MAE **5,001 min**, R² **0,694** (−48% de MAE vs. estimativa do app). TabPFN sozinho (200 mil linhas de contexto): MAE 5,006. LightGBM com 38 features: MAE 5,133, RMSE 6,652, R² 0,683. Rodada 1 (MLflow): HGB `complete` MAE 5,464 e LightGBM `complete` MAE 5,486. |
+| Qual modelo é o candidato a produção? | **LightGBM** (38 features, sem vazamento): erro próximo do melhor, treina em ~2 min em CPU, artefato de ~1 MB e importância de features nativa. **TabPFN/blend** fica como *challenger*: ganha 0,13 min de MAE, mas exige GPU e ~1h45 por execução. **Random Forest** fica como benchmark. |
+| Qual configuração usar em cada momento? | Features `reduced` no checkout (antes de haver entregador) e `complete` no despacho/aceite. |
+| Qual é a limitação mais séria? | Rodada 1: `poi_target_enc` calculado antes do split (métricas otimistas). A rodada 2 corrige isso, mas ainda usa um único split aleatório, uma semente e só 8 dias de dados. |
+| Pode ser usado em operação já? | **Não.** É preciso antes um período de validação com dados atuais e uma base de treino maior. |
+| Pode avaliar entregadores? | **Não.** O alvo mede o sistema de entrega, não o desempenho individual; há confundimento por distrito, loja, clima e oferta. As features `courier_target_enc` e `courier_speed_enc` (rodada 2) usam o histórico de cada entregador e exigem controle de uso (seção 10.3). |
 | Onde consultar? | MLflow em `http://localhost:5001/#/experiments/1`; os run IDs estão na seção 2. |
-| Há monitoramento em produção? | **Não implementado.** A seção 13 propõe indicadores e gatilhos para a Etapa 4. |
+| Há monitoramento em produção? | **Não implementado.** A seção 13 define indicadores, limites e ações; o relatório final traz uma simulação de chegada de dados novos (split por distrito). |
 
 ---
 
@@ -68,7 +84,7 @@ interpretar a comparação da seção 5.
 - Não é um modelo causal de despacho: prever duração não responde “o que aconteceria se
   este pedido fosse atribuído a outro entregador?”.
 - Não é um modelo de precificação, crédito, seguro ou avaliação de pessoas.
-- Não é um sistema de produção: não há serving, latência medida, fallback ou monitoramento
+- Não é um sistema de produção: não há serviço de previsão no ar, tempo de resposta medido, mecanismo de contingência ou monitoramento
   contínuo nesta entrega.
 
 ### 1.4 Critério de sucesso
@@ -147,19 +163,57 @@ Além desses, cada run registra `model`, `stage`, `seed=42`, `n_train`, `n_val`,
 
 | Decisão | Escolha primária | Justificativa | Alternativa |
 | --- | --- | --- | --- |
-| Checkout (`reduced`) | `hist_gradient_boosting-reduced` | Melhor MAE do estágio (5,941), melhor R² (0,576), artefato de 1,8 MB. | `lightgbm-reduced` (MAE 5,976; 0,9 MB; importância nativa). |
-| Despacho (`complete`) | `hist_gradient_boosting-complete` | Melhor MAE (5,464), melhor RMSE (7,040), melhor R² (0,641), artefato de 1,8 MB. | `lightgbm-complete` (MAE 5,486; diferença de 0,022 min; 1,0 MB; importância nativa). |
-| Benchmark/interpretabilidade | Random Forest `complete` | `feature_importances_` nativo e comportamento conhecido. | LightGBM `complete` (mais compacto e quase tão preciso). |
+| Checkout (`reduced`) | `lightgbm-reduced` | MAE 5,976, a 0,034 min do HGB; 0,9 MB; importância nativa; mesmo algoritmo usado na rodada 2. | `hist_gradient_boosting-reduced` (MAE 5,941). |
+| Despacho (`complete`) | `lightgbm-complete` | MAE 5,486, a 0,022 min do HGB; 1,0 MB; importância nativa. Na rodada 2, com 38 features e sem vazamento, chega a MAE 5,133. | `hist_gradient_boosting-complete` (MAE 5,464). |
+| Desafiante (*challenger*) | TabPFN-3.5 ou blend TabPFN + LightGBM (rodada 2) | Menor MAE observado (5,006 e 5,001). | Só avançar se o ganho se mantiver em várias sementes e o custo de GPU for aceito. |
+| Benchmark | Random Forest `complete` | Comportamento conhecido e importância nativa; registrado no MLflow. | — |
 
 **Ressalvas importantes:**
 
 - As diferenças entre HGB e LightGBM são pequenas (0,022 min no `complete`) e **não foram
-  testadas estatisticamente**; a escolha se baseia em uma única split de teste.
+  testadas estatisticamente**. A escolha do LightGBM é prática: importância nativa,
+  artefato menor e continuidade com a rodada 2.
 - O Random Forest é cerca de 100 a 180 vezes maior que o HGB e ficou atrás em MAE/R²;
-  não é a melhor escolha para serving, embora seja útil como benchmark.
+  não é a melhor escolha para colocar em uso, embora seja útil como referência.
 - O HGB não tem importância de features nativa. Se explicabilidade por feature for
   requisito, use LightGBM (importância nativa) ou permutation importance/SHAP.
 - Nenhuma dessas escolhas constitui aprovação para produção.
+
+### 2.5 Rodada 2 — features extras, TabPFN e blend
+
+A rodada 2 foi feita em notebooks (`notebooks/5_meituan_tabpfn_colab*.ipynb`) com o
+dataloader `notebooks/dataloader.py`. Diferenças em relação à rodada 1:
+
+| Item | Rodada 1 (pipeline DVC) | Rodada 2 (notebooks/Colab) |
+| --- | --- | --- |
+| Split | amostra de 500 mil; 350k / 100k / 50k | base limpa inteira; 377.104 / 107.744 / 53.872 (70/20/10) |
+| Target encoding | `poi_target_enc` **antes** do split (vazamento) | `restaurant_target_enc` e encodings de entregador **depois** do split, só com o treino |
+| Features | 9 (`reduced`) / 19 (`complete`) | 13 / 25, e 38 com as extras (`FEATURES_COMPLETE_EXTRA`) |
+| Rastreamento | MLflow + DVC | manifestos SHA-256 por cenário + CSVs de resultado (ainda não importados no MLflow) |
+
+Features extras (todas calculadas só com eventos anteriores ao momento da previsão):
+pedidos abertos no restaurante, tempo médio de entrega e atraso no distrito nos últimos
+30 min, demanda e entregadores ativos no distrito nos últimos 20 min, razão
+demanda/oferta, tempo de preparo recente do restaurante (60 min) e, no despacho, o
+histórico suavizado de tempo e velocidade de cada entregador.
+
+Resultados no teste completo (53.872 pedidos, split `70_30`, estágio de despacho):
+
+| Modelo | Linhas de treino | Features | MAE | RMSE | R² |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Estimativa do app Meituan | — | — | 9,535 | 11,646 | 0,029 |
+| Random Forest (50 árvores, prof. 12) | 377.104 | 25 | 5,672 | 7,325 | 0,616 |
+| LightGBM | 377.104 | 25 | 5,313 | 6,879 | 0,661 |
+| TabPFN-3.5 (mediana) | 50.000 | 25 | 5,323 | 6,962 | 0,653 |
+| LightGBM | 377.104 | 38 | 5,133 | 6,652 | 0,683 |
+| TabPFN-3.5 (mediana) | 100.000 | 38 | 5,073 | 6,642 | 0,684 |
+| TabPFN-3.5 (mediana) | 200.000 | 38 | 5,006 | n/d | 0,692 |
+| **Blend 0,80 TabPFN + 0,20 LightGBM** | 377.104 | 38 | **5,001** | n/d | **0,694** |
+
+O peso do blend foi escolhido na validação, nunca no teste. O TabPFN com 200 mil linhas
+levou ~106 min numa GPU T4 (pico de 13,1 GB); o LightGBM leva ~2 min em CPU. Os
+números das duas rodadas **não são diretamente comparáveis** (split, features e
+encoding diferentes).
 
 ---
 
@@ -497,7 +551,7 @@ erro é irredutível com os dados disponíveis.
 - O baseline é uma promessa com margem, não uma previsão pontual.
 - O baseline não é truncado em 5–90 min e tem cauda longa (máx. 325 min), o que infla
   RMSE/MSE.
-- A comparação é útil como referência operacional, mas não é *like-for-like*.
+- A comparação é útil como referência, mas não compara coisas iguais (promessa com folga × previsão).
 
 ### 6.7 Categorias e engenharia de features
 
@@ -524,11 +578,11 @@ erro é irredutível com os dados disponíveis.
 - Importância nativa não é causal; não substitui SHAP/permutation importance nem análise
   de subgrupos.
 
-### 6.10 Artefatos e serving
+### 6.10 Arquivos do modelo e uso em produção
 
 - Random Forest: 176–330 MB; pode ser caro em memória e latência.
 - HGB: 1,8 MB; LightGBM: 0,9–1,0 MB.
-- Não foi medido throughput/latência, nem testado serving, concorrência, fallback ou
+- Não foram medidos volume de previsões por segundo e tempo de resposta, nem testados uso simultâneo, mecanismo de contingência ou
   versionamento de modelo em produção.
 - Pickles em `models/` usam `pickle` padrão; os modelos logados no MLflow usam
   `cloudpickle`. A compatibilidade com versões futuras de Python/sklearn/LightGBM não é
@@ -564,16 +618,9 @@ automatizadas sem revisão.
 
 | Uso | Por que não |
 | --- | --- |
-| Definir a promessa ao cliente diretamente | É uma previsão pontual, sem margem nem calibração; uma previsão pontual não garante que o pedido chegue antes dela. Use um quantil superior e backtest. |
-| Avaliar, punir ou premiar entregadores | O alvo é o tempo do sistema, não o desempenho individual; há confundimento por distrito, loja, clima e oferta. Features como recusas e carga são operacionais, não métricas de mérito. |
-| Despacho automático | O modelo prevê duração, não o valor causal de uma atribuição; não foi validado como política de decisão. |
-| Generalizar para outra cidade, país, estação ou ano | Sem validação externa; a distribuição e a operação podem mudar radicalmente. |
-| Decisões de crédito, preço, seguro, RH ou elegibilidade | Fora do escopo; risco de discriminação e de uso indevido de dados de localização. |
-| Substituir o baseline oficial como “verdade” | O baseline é uma promessa; o modelo é uma estimativa. Nenhum dos dois é ground truth. |
-| Uso comercial dos dados ou derivados | A licença CC BY-NC 4.0 proíbe uso comercial e redistribuição dos dados brutos. |
-| Tempo real sem teste de latência/fallback | Não há serving, medição de p95, concorrência, cache ou plano de falha. |
-| Decisões com efeito legal ou sobre direitos | Não há base legal, auditoria de fairness nem mecanismo de contestação. |
-| Reidentificação de pessoas ou estabelecimentos | Os IDs são pseudonimizados e as coordenadas deslocadas; tentar reidentificar viola privacidade e a licença. |
+| Uso em operação sem um período de validação prévio | As métricas vêm de uma divisão aleatória de 8 dias. Antes de afetar clientes, o modelo deve rodar em paralelo com dados atuais e ter o erro comparado com o do teste. |
+| Uso comercial sem ampliar a base de treino | 8 dias de uma única cidade não representam a variação de uma operação real (estações, feriados, outras regiões). Além disso, a licença CC BY-NC 4.0 dos dados atuais não permite uso comercial. |
+| Avaliar, punir ou ranquear entregadores | O alvo é o tempo do sistema de entrega, não o desempenho individual; ele depende de distrito, restaurante, demanda e clima. Variáveis como recusas, carga e histórico do entregador são operacionais, não medidas de mérito. |
 
 ---
 
@@ -620,6 +667,10 @@ automatizadas sem revisão.
 
 - Features como `prior_rejections`, `carga_entregador` e `pos_na_wave` descrevem o
   processo, não o mérito do entregador.
+- Na rodada 2, `courier_target_enc` e `courier_speed_enc` resumem o histórico de cada
+  entregador. Elas melhoram a previsão, mas são o tipo de informação que pode virar uma
+  nota individual. Regras: usar apenas dentro do modelo, nunca expor como ranking, e
+  avaliar se o ganho justifica o risco (comparar o modelo com e sem essas features).
 - O modelo **não** deve ser usado para avaliar, punir, premiar ou ranquear entregadores.
 - Qualquer uso que afete renda, escala ou condições de trabalho exige negociação,
   transparência e revisão humana.
@@ -652,7 +703,8 @@ automatizadas sem revisão.
 
 | Papel | Nome / contato | Responsabilidade |
 | --- | --- | --- |
-| Responsável técnico | Guilherme (`guinbraga`), autor do repositório e executor das runs (`mlflow.user=guilherme`) | Escopo, treino, avaliação, documentação, versionamento e revisão deste card. |
+| Equipe responsável | Guilherme Braga, Guilherme Costanzi e Rafael Cobo (UEL) | Dono coletivo do modelo no contexto da disciplina. |
+| Responsável técnico do pipeline | Guilherme Braga (`guinbraga`), autor do repositório e executor das runs (`mlflow.user=guilherme`) | Treino, avaliação, versionamento e revisão deste card. |
 | Contato | Repositório Git do projeto (issues/commits) | Receber dúvidas, correções e solicitações de revisão. |
 | Aprovação para produção | **Não concedida** | Este card documenta um artefato experimental; qualquer uso externo exige nova aprovação. |
 | Revisão | Antes de qualquer uso externo; após retreino, mudança de dados/features ou incidente; no mínimo semestral | Atualizar métricas, limitações, riscos e status. |
@@ -753,11 +805,12 @@ treino. Se o workspace tiver sido alterado depois, verifique `dvc status` e comp
 
 ---
 
-## 13. Monitoramento (proposta para a Etapa 4)
+## 13. Monitoramento
 
-> **Não implementado.** Esta seção responde à pergunta “como saberíamos que o modelo
-> continua funcionando?” com indicadores e gatilhos que podem ser implementados em uma
-> próxima etapa.
+> **Não implementado em produção.** Esta seção responde à pergunta “como saberíamos que o
+> modelo continua funcionando?”. A versão final do plano (indicador, limite e ação, incluindo
+> benefício esperado, impacto e utilização) e a simulação com uma região nova estão no
+> relatório final, seção 6.
 
 ### 13.1 Dados
 
@@ -773,9 +826,9 @@ treino. Se o workspace tiver sido alterado depois, verifique `dvc status` e comp
 
 | Indicador | O que medir | Referência / alerta inicial |
 | --- | --- | --- |
-| MAE | MAE por janela (dia/semana) com rótulos disponíveis | > 6,5 min por 2 janelas consecutivas (HGB `complete`: 5,46) |
+| MAE | MAE por janela (dia/semana) com rótulos disponíveis | Alerta > +15% e crítico > +25% sobre a referência (LightGBM 38 features: 5,13 → 5,9 / 6,4 min) |
 | RMSE | RMSE por janela | > 8,5 min (referência: 7,04) |
-| R² | R² por janela | < 0,55 (referência: 0,64) |
+| R² | R² por janela, lido junto com a variância do alvo | Queda > 0,05 alerta; > 0,15 crítico |
 | Viés | média (real − previsto) | valor absoluto > 0,5 min |
 | Cauda | P90/P95 do erro absoluto | P90 > 14 min (a calibrar a partir do teste) |
 | Subgrupos | MAE por distrito, POI, turno, carga | Gap > 2 min entre subgrupos |
@@ -791,7 +844,7 @@ treino. Se o workspace tiver sido alterado depois, verifique `dvc status` e comp
 | Cancelamentos | taxa após a promessa | Efeito de promessas ruins. |
 | Utilização | pedidos por entregador/hora; ociosidade | Custo operacional. |
 | Custo | custo por entrega; compensações | Impacto financeiro. |
-| Utilização do modelo | % de pedidos pontuados; fallback; latência p95 | Saúde do serving. |
+| Utilização do modelo | % de pedidos com previsão; uso da contingência; tempo de resposta | Mostra se o serviço está funcionando. |
 
 ### 13.4 Governança
 
@@ -806,7 +859,7 @@ treino. Se o workspace tiver sido alterado depois, verifique `dvc status` e comp
 
 ### 13.5 Gatilhos de retreino/revisão
 
-- MAE > 6,5 min por duas janelas consecutivas, ou aumento > 20% vs referência.
+- MAE acima de +25% da referência, ou acima de +15% por duas semanas seguidas.
 - PSI > 0,2 em features-chave (distância, hora, preparo, demanda, carga).
 - Mudança de cidade, estação, política de despacho ou mix de pedidos.
 - Incidente com dano a cliente/entregador ou reclamação recorrente.
@@ -816,7 +869,7 @@ treino. Se o workspace tiver sido alterado depois, verifique `dvc status` e comp
 ### 13.6 Resposta a incidentes (proposta)
 
 1. Detectar e registrar o incidente com `run_id`, `data_version` e janela afetada.
-2. Suspender uso automatizado; manter o modo assistido ou fallback.
+2. Suspender o uso automático; manter apenas o uso com revisão humana ou voltar à estimativa do app (contingência).
 3. Comparar métricas com a referência e identificar drift/dados/feature.
 4. Corrigir, reavaliar e, se necessário, retreinar com nova versão.
 5. Aprovar novamente antes de voltar ao uso; atualizar este card.
@@ -846,7 +899,8 @@ treino. Se o workspace tiver sido alterado depois, verifique `dvc status` e comp
 
 | Versão | Data | Mudança | Responsável |
 | --- | --- | --- | --- |
-| 1.0 | 2026-11-21 | Card inicial cobrindo os seis modelos da Etapa 3 e o baseline. | Guilherme (`guinbraga`) |
+| 1.0 | 2026-11-21 | Card inicial cobrindo os seis modelos da Etapa 3 e o baseline. | Guilherme Braga (`guinbraga`) |
+| 1.1 | 2026-11-22 | Rodada 2 (TabPFN, LightGBM com 38 features, blend); LightGBM como candidato e TabPFN como *challenger*; ética das features por entregador; equipe responsável; limites de monitoramento alinhados ao relatório final; links corrigidos. | Equipe |
 
 **Quando revisar:**
 
@@ -863,7 +917,9 @@ números mudarem, atualizar as tabelas e a versão deste card.
 
 ## 16. Referências
 
-- [Enunciado do Projeto Final — Etapas 3 e 4](<../ProjetoFinal_Etapas3_4.pdf>)
+- [Enunciado do Projeto Final — Etapas 3 e 4](<../phase_instructions/ProjetoFinal_Etapas3_4.pdf>)
+- [Relatório da rodada 2 (TabPFN)](../../reports/relatorio_tabpfn_v2_100k.pdf)
+- [Relatório final (Etapa 4)](../final/relatorio_final/relatorio_final.pdf)
 - [README do repositório](../../README.md)
 - [Registro dos experimentos (Markdown)](../../reports/experiment_registry.md)
 - [Registro dos experimentos (CSV)](../../reports/experiment_registry.csv)
@@ -871,8 +927,8 @@ números mudarem, atualizar as tabelas e a versão deste card.
 - [Pipeline DVC](../../dvc.yaml) e [lock](../../dvc.lock)
 - [Parâmetros](../../params.yaml)
 - [Notebook de origem](../../notebooks/meituan_delivery_prediction_v3.md)
-- [Relatório de dados do desafio (15/10/2024)](<../tsl_meituan_2024_data_report_20241015.pdf>)
-- [Background e descrição dos dados (21/03/2024)](<../TSL-Meituan challenge_background and data_20240321.pdf>)
+- [Relatório de dados do desafio (15/10/2024)](<../meituan_challenge/tsl_meituan_2024_data_report_20241015.pdf>)
+- [Background e descrição dos dados (21/03/2024)](<../meituan_challenge/TSL-Meituan challenge_background and data_20240321.pdf>)
 - [Licença dos dados](../../License.txt)
 - Mitchell, M. et al. *Model Cards for Model Reporting*. FAT* 2019.
   <https://doi.org/10.1145/3287560.3287596>

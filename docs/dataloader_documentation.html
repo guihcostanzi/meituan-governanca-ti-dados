@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentação do Dataloader Meituan ETA (v4)</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 12mm 13mm;
+    }
+
+    :root {
+      --navy: #0f2537;
+      --blue: #1d4ed8;
+      --teal: #0f766e;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --muted: #475569;
+      --code-bg: #f1f5f9;
+      --accent-soft: #eff6ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.42;
+      font-size: 9.5pt;
+      margin: 0 auto;
+      max-width: 920px;
+      padding: 16px 24px 28px;
+    }
+
+    @media print {
+      body {
+        max-width: none;
+        padding: 0;
+        font-size: 8.8pt;
+      }
+    }
+
+    header.doc-header {
+      background: linear-gradient(135deg, #0f2537 0%, #1e3a5f 100%);
+      color: #ffffff;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    header.doc-header .eyebrow {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      color: #93c5fd;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    header.doc-header h1 {
+      margin: 0 0 4px;
+      font-size: 16.5pt;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    header.doc-header p {
+      margin: 0;
+      font-size: 9pt;
+      color: #e2e8f0;
+    }
+
+    header.doc-header code {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      padding: 1px 5px;
+    }
+
+    .meta-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .meta-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+
+    .meta-card .val {
+      display: block;
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .meta-card .lbl {
+      display: block;
+      font-size: 7.5pt;
+      color: var(--muted);
+    }
+
+    h2 {
+      font-size: 11.8pt;
+      color: var(--navy);
+      border-bottom: 2px solid var(--blue);
+      padding-bottom: 3px;
+      margin: 14px 0 8px;
+      break-after: avoid;
+    }
+
+    h3 {
+      font-size: 10pt;
+      color: #1e3a5f;
+      margin: 11px 0 5px;
+      break-after: avoid;
+    }
+
+    p {
+      margin: 4px 0 6px;
+    }
+
+    ul {
+      margin: 4px 0 8px;
+      padding-left: 18px;
+    }
+
+    li {
+      margin-bottom: 3px;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 8.2pt;
+      background: var(--code-bg);
+      color: #0f172a;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 7.7pt;
+      line-height: 1.35;
+      overflow-x: auto;
+      margin: 6px 0 8px;
+      break-inside: avoid;
+    }
+
+    .callout {
+      background: var(--accent-soft);
+      border-left: 4px solid var(--blue);
+      padding: 8px 11px;
+      border-radius: 0 6px 6px 0;
+      margin: 8px 0 10px;
+      break-inside: avoid;
+    }
+
+    .callout strong {
+      color: var(--navy);
+    }
+
+    .pipeline-flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      margin: 8px 0 12px;
+      break-inside: avoid;
+    }
+
+    .flow-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--teal);
+      border-radius: 6px;
+      padding: 7px 8px;
+    }
+
+    .flow-step.post {
+      border-top-color: var(--blue);
+      background: #f0f7ff;
+    }
+
+    .flow-step .step-num {
+      font-size: 7.2pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--teal);
+    }
+
+    .flow-step.post .step-num {
+      color: var(--blue);
+    }
+
+    .flow-step .step-title {
+      font-weight: 700;
+      font-size: 8.8pt;
+      margin: 2px 0 3px;
+      color: var(--navy);
+    }
+
+    .flow-step p {
+      font-size: 7.7pt;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.32;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 10px;
+      font-size: 8.1pt;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tr {
+      break-inside: avoid;
+    }
+
+    th {
+      background: var(--navy);
+      color: #ffffff;
+      text-align: left;
+      padding: 5px 7px;
+      font-weight: 600;
+      border: 1px solid var(--navy);
+    }
+
+    th code {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+    }
+
+    td {
+      padding: 3.5px 6px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 9px;
+      font-size: 7.1pt;
+      font-weight: 600;
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .badge.target { background: #fee2e2; color: #991b1b; }
+    .badge.id { background: #fef3c7; color: #92400e; }
+    .badge.gps { background: #dcfce7; color: #166534; }
+    .badge.dist { background: #dbeafe; color: #1e40af; }
+    .badge.time { background: #f3e8ff; color: #6b21a8; }
+    .badge.dyn { background: #ccfbf1; color: #115e59; }
+    .badge.post { background: #e0e7ff; color: #3730a3; }
+
+    .page-break {
+      break-before: page;
+    }
+
+    .keep-together {
+      break-inside: avoid;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      break-inside: avoid;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .card h4 {
+      margin: 0 0 4px;
+      font-size: 8.9pt;
+      color: var(--navy);
+    }
+
+    .card p, .card ul {
+      font-size: 8pt;
+      margin: 0;
+    }
+
+    footer {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+      font-size: 7.5pt;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="doc-header">
+    <div class="eyebrow">Projeto Integrado CDIA (UEL) &bull; Base Meituan INFORMS TSL 2024</div>
+    <h1>Documentação do Dataloader Unificado (<code>data/dataloader.py</code>)</h1>
+    <p>Pipeline padronizado de limpeza, engenharia de features em inglês, divisão anti-vazamento e esquemas prontos para Random Forest, Gradient Boosting, DCN/MLP, FT-Transformer e TabPFN.</p>
+  </header>
+
+  <div class="meta-strip">
+    <div class="meta-card">
+      <span class="val">538.720</span>
+      <span class="lbl">Registros Limpos (82,3%)</span>
+    </div>
+    <div class="meta-card">
+      <span class="val">29</span>
+      <span class="lbl">Colunas Padronizadas (EN)</span>
+    </div>
+    <div class="meta-card">
+      <span class="val">4 Splits</span>
+      <span class="lbl">70/30, 80/20, Estrat., Distrito</span>
+    </div>
+    <div class="meta-card">
+      <span class="val">0 Leakage</span>
+      <span class="lbl">Target Encoding Pós-Split</span>
+    </div>
+  </div>
+
+  <h2>1. Visão Geral e Arquitetura Anti-Vazamento</h2>
+  <p>
+    O módulo <code>data/dataloader.py</code> centraliza toda a preparação de dados extraída do notebook <code>4_meituan_delivery_prediction_v4.ipynb</code>, garantindo que todas as modelagens do projeto utilizem exatamente a mesma base, os mesmos filtros, os mesmos nomes de colunas em inglês e as mesmas regras de divisão.
+  </p>
+
+  <div class="callout">
+    <strong>Por que o dataloader sempre retorna os dados já divididos?</strong><br />
+    Em vez de expor a tabela inteira antes da partição, a função principal <code>load_meituan(...)</code> entrega diretamente <code>(train_df, val_df, test_df)</code> (ou <code>(train_df, test_df)</code> quando <code>include_val=False</code>). Dessa forma, transformações que dependem de estatísticas globais da amostra são calculadas <strong>exclusivamente após o split</strong> usando apenas o conjunto de treino, eliminando o risco de <em>data leakage</em> entre partições.
+  </div>
+
+  <div class="pipeline-flow">
+    <div class="flow-step">
+      <div class="step-num">Etapa 1 &bull; Pré-Split</div>
+      <div class="step-title">Leitura e Rejeições</div>
+      <p>Lê <code>all_waybill_info</code> (654.343 linhas) e calcula <code>prior_rejections</code> por pedido antes de descartar recusas.</p>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">Etapa 2 &bull; Pré-Split</div>
+      <div class="step-title">Limpeza e Features Causais</div>
+      <p>Aplica os 6 filtros (538.720 linhas), gera atributos causais (UTC+8, latências, carga, demanda, waves) e salva cache de 25 colunas.</p>
+    </div>
+    <div class="flow-step post">
+      <div class="step-num">Etapa 3 &bull; Split</div>
+      <div class="step-title">Divisão Controlada</div>
+      <p>Separa os dados conforme o parâmetro <code>split</code> escolhido (<code>70_30</code>, <code>80_20</code>, <code>stratified_district</code> ou <code>district</code>).</p>
+    </div>
+    <div class="flow-step post">
+      <div class="step-num">Etapa 4 &bull; Pós-Split</div>
+      <div class="step-title">Distância e Target Enc.</div>
+      <p>Calcula distâncias (<code>haversine</code>/<code>manhattan</code> com média de <code>train</code>) e <code>restaurant_target_enc</code> K-Fold só no treino.</p>
+    </div>
+  </div>
+
+  <h2>2. Processos de Tratamento e Engenharia de Atributos</h2>
+
+  <h3>2.1 Limpeza dos Dados Brutos e Prevenção de Vazamento Temporal</h3>
+  <p>Sobre os <strong>654.343</strong> registros brutos originais, são aplicados seis filtros sequenciais até restarem <strong>538.720</strong> entregas válidas (<strong>82,3%</strong>):</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 5%;">#</th>
+        <th style="width: 32%;">Filtro Aplicado</th>
+        <th style="width: 40%;">Regra Técnica</th>
+        <th style="width: 23%;">Linhas Restantes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>0</td><td>Base bruta original</td><td>Leitura de <code>all_waybill_info_meituan_0322.csv.zip</code></td><td>654.343 (100,0%)</td></tr>
+      <tr><td>1</td><td>Apenas waybills aceitos</td><td><code>is_courier_grabbed == 1</code></td><td>568.546 (86,9%)</td></tr>
+      <tr><td>2</td><td>Sem pedidos agendados</td><td><code>is_prebook == 0</code></td><td>546.365 (83,5%)</td></tr>
+      <tr><td>3</td><td>Timestamps válidos (&gt; 0)</td><td>Sem zeros sentinela nas 6 colunas de horário</td><td>538.920 (82,4%)</td></tr>
+      <tr><td>4</td><td>Coordenadas GPS válidas (&gt; 0)</td><td>Sem zeros sentinela em loja, cliente e aceite</td><td>538.920 (82,4%)</td></tr>
+      <tr><td>5</td><td>Cronologia coerente</td><td><code>dispatch_time &gt;= platform_order_time</code> e <code>arrive_time &gt; dispatch_time</code></td><td>538.920 (82,4%)</td></tr>
+      <tr><td>6</td><td>Faixa válida do alvo</td><td><code>5 &lt;= target_total_time_min &lt;= 180</code> minutos</td><td><strong>538.720 (82,3%)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    Após extrair o alvo e as latências operacionais, todas as colunas brutas de timestamps futuros ou internos (<code>arrive_time</code>, <code>fetch_time</code>, <code>estimate_arrived_time</code>, <code>dispatch_time</code>, <code>grab_time</code>, <code>order_push_time</code>, <code>platform_order_time</code>, <code>wave_start_time</code>) são <strong>removidas</strong> do DataFrame final para impedir vazamento acidental.
+  </p>
+
+  <div class="page-break"></div>
+
+  <h3>2.2 Engenharia de Atributos Pré-Split (Apenas Informação Causal)</h3>
+  <ul>
+    <li><strong>Alvo e Baseline:</strong> <code>target_total_time_min</code> mede a duração real entre o clique do pedido e a entrega; <code>meituan_baseline_min</code> registra a estimativa original exibida pelo aplicativo (usada somente como régua de comparação).</li>
+    <li><strong>Atributos Temporais (Fuso UTC+8):</strong> Extrai hora (<code>order_hour</code>), dia da semana (<code>day_of_week</code>), indicador <code>is_weekend</code>, além da projeção circular (<code>sin_order_hour</code>, <code>cos_order_hour</code>) para manter continuidade entre 23h e 00h.</li>
+    <li><strong>Latências Operacionais:</strong> Calcula preparo estimado (<code>est_meal_prep_min</code>), espera até o despacho (<code>queue_wait_min</code>), tempo até o aceite do entregador (<code>time_to_grab_min</code>) e preparo restante no despacho (<code>rem_prep_at_dispatch_min</code>).</li>
+    <li><strong>Dinâmica de Oferta, Demanda e Lotes (Waves):</strong> Ordenando os eventos por <code>grab_time</code>, calcula exclusivamente com eventos passados até o instante do aceite: <code>prior_rejections</code> (recusas prévias do pedido), <code>courier_active_orders</code> (pedidos simultâneos na mochila do entregador), <code>district_demand_20min</code> (pedidos disparados no distrito nos 20 min anteriores), <code>is_in_wave</code> e <code>wave_position</code> (posição do pedido na rota em lote, sem contar pedidos futuros da mesma wave).</li>
+  </ul>
+  <p>
+    Essas <strong>25 colunas</strong> pré-split são salvas no cache <code>data/cache/base_clean_v4_alvo5-180.parquet</code>, mantendo o carregamento rápido (~0,3s) sem fixar nenhum parâmetro dependente de split.
+  </p>
+
+  <h3>2.3 Opções de Split (Parâmetro <code>split</code>)</h3>
+  <p>O parâmetro <code>split</code> na função <code>load_meituan(split=...)</code> oferece quatro estratégias enxutas e complementares para todo o portfólio de modelos do projeto:</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 21%;">Valor de <code>split</code></th>
+        <th style="width: 24%;">Proporção (Treino / Val / Teste)</th>
+        <th style="width: 27%;">Comportamento e Lógica</th>
+        <th style="width: 28%;">Indicação Principal por Modelo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>"70_30"</code><br /><span style="color:#64748b;font-size:7.4pt;">(padrão; aliases: <code>"random"</code>, <code>"aleatorio"</code>)</span></td>
+        <td><strong>70% / 20% / 10%</strong><br />377.104 / 107.744 / 53.872<br /><span style="color:#64748b;font-size:7.4pt;">(ou 70/30 com <code>include_val=False</code>)</span></td>
+        <td>Divisão aleatória uniforme sobre os 538.720 pedidos. Mantém 20% livres para <em>early stopping</em> e busca de hiperparâmetros.</td>
+        <td><strong>Random Forest</strong>, <strong>Gradient Boosting</strong> (LightGBM, CatBoost, HGB), <strong>DCN/MLP</strong> e benchmark oficial.</td>
+      </tr>
+      <tr>
+        <td><code>"80_20"</code><br /><span style="color:#64748b;font-size:7.4pt;">(alias: <code>"80_10_10"</code>)</span></td>
+        <td><strong>80% / 10% / 10%</strong><br />430.976 / 53.872 / 53.872<br /><span style="color:#64748b;font-size:7.4pt;">(ou 80/20 com <code>include_val=False</code>)</span></td>
+        <td>Amplia o conjunto de treino para 80% (+53.872 amostras) preservando 10% para validação e 10% para teste.</td>
+        <td><strong>FT-Transformer</strong> (arquiteturas baseadas em <em>attention</em> e embeddings de IDs se beneficiam de maior massa de treino).</td>
+      </tr>
+      <tr>
+        <td><code>"stratified_district"</code><br /><span style="color:#64748b;font-size:7.4pt;">(alias: <code>"stratified"</code>)</span></td>
+        <td><strong>70% / 20% / 10%</strong><br />377.104 / 107.744 / 53.872<br /><span style="color:#64748b;font-size:7.4pt;">(estratificado por <code>district_id</code>)</span></td>
+        <td>Preserva exatamente a proporção dos 23 distritos (incluindo distritos pequenos como o 22) em treino, validação e teste.</td>
+        <td><strong>TabPFN</strong> (subamostragem/ensemble equilibrado de distritos) e <strong>FT-Transformer</strong> com embedding de distrito.</td>
+      </tr>
+      <tr>
+        <td><code>"district"</code><br /><span style="color:#64748b;font-size:7.4pt;">(aliases: <code>"distrito"</code>, <code>"spatial"</code>)</span></td>
+        <td><strong>70,6% / 14,7% / 14,7%</strong><br />380.518 / 79.179 / 79.023<br /><span style="color:#64748b;font-size:7.4pt;">(Val: 6–7 | Teste: 8–9)</span></td>
+        <td>Separação espacial <em>out-of-distribution</em> por distritos inteiros nunca vistos durante o treinamento.</td>
+        <td>Teste de generalização geográfica (<em>cold-start</em> em novos bairros) para todos os modelos.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2.4 Engenharia de Atributos Pós-Split (Sem Data Leakage)</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h4>1. Target Encoding Seguro (<code>restaurant_target_enc</code>)</h4>
+      <ul>
+        <li><strong>No treino:</strong> validação cruzada K-Fold (<code>n_splits=5</code>, embaralhado com <code>seed</code>). Cada dobra recebe a média suavizada das outras 4 dobras (nunca vê o próprio alvo).</li>
+        <li><strong>Na validação e teste:</strong> recebem o mapa ajustado sobre todo o <code>train_df</code> com suavização bayesiana (<code>smoothing=10.0</code>).</li>
+        <li><strong>Lojas inéditas:</strong> recebem automaticamente a média global de <code>train_df</code> (~29,49 min).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>2. Distâncias Espaciais (<code>haversine</code> ou <code>manhattan</code>)</h4>
+      <ul>
+        <li><strong>Haversine (padrão):</strong> distância geodésica em linha reta sobre a esfera terrestre (independente entre linhas).</li>
+        <li><strong>Manhattan (L1):</strong> distância ortogonal em quarteirões viários. A latitude média de projeção <code>ref_lat_rad</code> é calculada <strong>exclusivamente sobre <code>train_df</code></strong> após o split, evitando vazamento espacial.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <h2>3. Dataset Final: Dicionário Completo das 29 Colunas (em Inglês)</h2>
+  <p>Todos os DataFrames retornados por <code>load_meituan()</code> possuem exatamente as <strong>29 colunas</strong> abaixo, livres de valores ausentes (<code>NaN = 0</code>) e com nomenclatura padronizada em inglês:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 24%;">Coluna Final (Inglês)</th>
+        <th style="width: 22%;">Nome Anterior (v4 / Bruto)</th>
+        <th style="width: 10%;">Grupo</th>
+        <th style="width: 8%;">Tipo</th>
+        <th style="width: 36%;">Descrição</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>target_total_time_min</code></td><td><code>tempo_entrega_min</code></td><td><span class="badge target">Alvo</span></td><td><code>float64</code></td><td>Tempo real total da entrega (min), do pedido à entrega.</td></tr>
+      <tr><td><code>meituan_baseline_min</code></td><td><code>tempo_prometido_app_min</code></td><td><span class="badge target">Baseline</span></td><td><code>float64</code></td><td>ETA prometido pelo app Meituan (apenas referência; não usar como feature).</td></tr>
+
+      <tr><td><code>restaurant_id</code></td><td><code>id_restaurante</code> / <code>poi_id</code></td><td><span class="badge id">ID</span></td><td><code>int64</code></td><td>Identificador único do restaurante (útil para embeddings no FT-Transformer).</td></tr>
+      <tr><td><code>district_id</code></td><td><code>id_distrito</code> / <code>da_id</code></td><td><span class="badge id">ID</span></td><td><code>int64</code></td><td>Identificador da região/distrito de despacho (0 a 22).</td></tr>
+      <tr><td><code>courier_id</code></td><td><code>courier_id</code></td><td><span class="badge id">ID</span></td><td><code>int64</code></td><td>Identificador do entregador responsável pelo waybill.</td></tr>
+
+      <tr><td><code>restaurant_lat</code></td><td><code>lat_loja</code> / <code>sender_lat</code></td><td><span class="badge gps">GPS</span></td><td><code>int64</code></td><td>Latitude do restaurante em micrograus (grau &times; 10<sup>6</sup>).</td></tr>
+      <tr><td><code>restaurant_lng</code></td><td><code>lng_loja</code> / <code>sender_lng</code></td><td><span class="badge gps">GPS</span></td><td><code>int64</code></td><td>Longitude do restaurante em micrograus (grau &times; 10<sup>6</sup>).</td></tr>
+      <tr><td><code>customer_lat</code></td><td><code>lat_cliente</code> / <code>recipient_lat</code></td><td><span class="badge gps">GPS</span></td><td><code>int64</code></td><td>Latitude do cliente em micrograus (grau &times; 10<sup>6</sup>).</td></tr>
+      <tr><td><code>customer_lng</code></td><td><code>lng_cliente</code> / <code>recipient_lng</code></td><td><span class="badge gps">GPS</span></td><td><code>int64</code></td><td>Longitude do cliente em micrograus (grau &times; 10<sup>6</sup>).</td></tr>
+      <tr><td><code>courier_lat</code></td><td><code>lat_entregador</code> / <code>grab_lat</code></td><td><span class="badge gps">GPS</span></td><td><code>int64</code></td><td>Latitude do entregador no instante do aceite (grau &times; 10<sup>6</sup>).</td></tr>
+      <tr><td><code>courier_lng</code></td><td><code>lng_entregador</code> / <code>grab_lng</code></td><td><span class="badge gps">GPS</span></td><td><code>int64</code></td><td>Longitude do entregador no instante do aceite (grau &times; 10<sup>6</sup>).</td></tr>
+
+      <tr><td><code>dist_rest_client_km</code></td><td><code>dist_loja_cliente_km</code></td><td><span class="badge dist">Distância</span></td><td><code>float64</code></td><td>Distância restaurante &rarr; cliente (km, Haversine ou Manhattan).</td></tr>
+      <tr><td><code>dist_driver_rest_km</code></td><td><code>dist_entregador_loja_km</code></td><td><span class="badge dist">Distância</span></td><td><code>float64</code></td><td>Distância entregador no aceite &rarr; restaurante (km).</td></tr>
+      <tr><td><code>dist_total_driver_trip_km</code></td><td><code>dist_rota_total_km</code></td><td><span class="badge dist">Distância</span></td><td><code>float64</code></td><td>Soma das duas pernas da rota: <code>dist_driver_rest_km + dist_rest_client_km</code>.</td></tr>
+
+      <tr><td><code>order_hour</code></td><td><code>hora_pedido</code> / <code>order_hour</code></td><td><span class="badge time">Temporal</span></td><td><code>int32</code></td><td>Hora local do pedido no fuso UTC+8 (0 a 23).</td></tr>
+      <tr><td><code>day_of_week</code></td><td><code>dia_semana</code> / <code>day_of_week</code></td><td><span class="badge time">Temporal</span></td><td><code>int32</code></td><td>Dia da semana (0 = segunda-feira a 6 = domingo).</td></tr>
+      <tr><td><code>is_weekend</code></td><td><code>eh_fim_de_semana</code></td><td><span class="badge time">Temporal</span></td><td><code>int8</code></td><td>Indicador binário para sábado ou domingo (1 ou 0).</td></tr>
+      <tr><td><code>sin_order_hour</code></td><td><code>hora_seno</code> / <code>sin_order_hour</code></td><td><span class="badge time">Temporal</span></td><td><code>float64</code></td><td>Codificação circular seno do minuto do dia (2&pi; &middot; min / 1440).</td></tr>
+      <tr><td><code>cos_order_hour</code></td><td><code>hora_cosseno</code> / <code>cos_order_hour</code></td><td><span class="badge time">Temporal</span></td><td><code>float64</code></td><td>Codificação circular cosseno do minuto do dia (2&pi; &middot; min / 1440).</td></tr>
+
+      <tr><td><code>est_meal_prep_min</code></td><td><code>tempo_estimado_cozinha_min</code></td><td><span class="badge time">Latência</span></td><td><code>float64</code></td><td>Tempo estimado de preparo pela cozinha (min).</td></tr>
+      <tr><td><code>time_to_grab_min</code></td><td><code>tempo_ate_aceite_min</code></td><td><span class="badge time">Latência</span></td><td><code>float64</code></td><td>Tempo decorrido entre o clique do pedido e o aceite do entregador (min).</td></tr>
+      <tr><td><code>queue_wait_min</code></td><td><code>tempo_espera_despacho_min</code></td><td><span class="badge time">Latência</span></td><td><code>float64</code></td><td>Tempo de fila do pedido até ser despachado (min).</td></tr>
+      <tr><td><code>rem_prep_at_dispatch_min</code></td><td><code>tempo_restante_cozinha_min</code></td><td><span class="badge time">Latência</span></td><td><code>float64</code></td><td>Tempo estimado restante de preparo no momento do despacho (min).</td></tr>
+
+      <tr><td><code>prior_rejections</code></td><td><code>qtd_recusas_previas</code></td><td><span class="badge dyn">Dinâmica</span></td><td><code>int32</code></td><td>Número de tentativas recusadas antes do aceite final do pedido.</td></tr>
+      <tr><td><code>courier_active_orders</code></td><td><code>pedidos_ativos_entregador</code></td><td><span class="badge dyn">Dinâmica</span></td><td><code>int32</code></td><td>Pedidos já aceitos e ainda não entregues pelo entregador no aceite.</td></tr>
+      <tr><td><code>district_demand_20min</code></td><td><code>demanda_distrito_20min</code></td><td><span class="badge dyn">Dinâmica</span></td><td><code>int32</code></td><td>Volume de pedidos enviados ao mesmo distrito nos últimos 20 minutos.</td></tr>
+      <tr><td><code>is_in_wave</code></td><td><code>entrega_em_lote</code></td><td><span class="badge dyn">Dinâmica</span></td><td><code>int8</code></td><td>Indica se o entregador já estava em uma <em>wave</em> ativa ao aceitar (1 ou 0).</td></tr>
+      <tr><td><code>wave_position</code></td><td><code>ordem_na_entrega_lote</code></td><td><span class="badge dyn">Dinâmica</span></td><td><code>int32</code></td><td>Posição sequencial (0, 1, 2...) do pedido dentro da <em>wave</em> até o aceite.</td></tr>
+
+      <tr><td><code>restaurant_target_enc</code></td><td><code>tempo_medio_loja_enc</code></td><td><span class="badge post">Pós-Split</span></td><td><code>float64</code></td><td>Média histórica suavizada do restaurante calculada só sobre o treino.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="keep-together">
+    <h2>4. Conjuntos Prontos de Features e Exemplo de Uso</h2>
+    <p>Para padronizar os experimentos nos dois estágios operacionais do Notebook 4, o módulo exporta apenas duas listas de features prontas:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 24%;">Constante Exportada</th>
+          <th style="width: 8%;">Qtd.</th>
+          <th style="width: 22%;">Estágio Operacional</th>
+          <th style="width: 46%;">Composição Completa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>FEATURES_REDUCED</code></td>
+          <td><strong>13</strong></td>
+          <td>Checkout (Compra)</td>
+          <td><code>dist_rest_client_km</code>, GPS de restaurante/cliente (<code>restaurant_lat/lng</code>, <code>customer_lat/lng</code>), 5 atributos temporais, <code>est_meal_prep_min</code>, <code>district_id</code> e <code>restaurant_target_enc</code>.</td>
+        </tr>
+        <tr>
+          <td><code>FEATURES_COMPLETE</code></td>
+          <td><strong>25</strong></td>
+          <td>Despacho (Aceite)</td>
+          <td><code>FEATURES_REDUCED</code> + GPS do entregador (<code>courier_lat/lng</code>), <code>dist_driver_rest_km</code>, <code>dist_total_driver_trip_km</code>, 3 latências operacionais e 5 dinâmicas de fila/demanda/wave.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <pre>import sys
+sys.path.append("../data")
+from dataloader import (
+    load_meituan, TARGET, BASELINE,
+    FEATURES_REDUCED, FEATURES_COMPLETE,
+)
+
+# Exemplo 1: RF / Gradient Boosting / DCN no protocolo 70/20/10 com Haversine
+train_df, val_df, test_df = load_meituan(split="70_30", distance="haversine", seed=42)
+
+# Exemplo 2: FT-Transformer (80/10/10) ou TabPFN (estratificado por distrito)
+tr_ft, val_ft, te_ft = load_meituan(split="80_20", distance="manhattan", seed=42)
+tr_pfn, val_pfn, te_pfn = load_meituan(split="stratified_district", distance="haversine", seed=42)
+
+# Exemplo 3: Apenas treino e teste (ex.: Random Forest sem validação separada)
+tr_rf, te_rf = load_meituan(split="70_30", include_val=False)
+
+X_train, y_train = train_df[FEATURES_COMPLETE], train_df[TARGET]
+X_val,   y_val   = val_df[FEATURES_COMPLETE],   val_df[TARGET]
+X_test,  y_test  = test_df[FEATURES_COMPLETE],  test_df[TARGET]</pre>
+  </div>
+
+  <footer>
+    Documentação gerada para o repositório <strong>PROJETO-INTEGRADO-CDIA--meituan-delivery-time-prediction</strong> &bull; Fonte: <code>data/dataloader.py</code>
+  </footer>
+
+</body>
+</html>
