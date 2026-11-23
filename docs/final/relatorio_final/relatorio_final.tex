@@ -65,32 +65,35 @@ na entrega final.
 \label{sec:exec}
 
 \paragraph{Problema.} Num aplicativo de delivery, o cliente recebe uma estimativa de quando o
-pedido vai chegar. Se a estimativa é curta demais, o pedido atrasa e o cliente reclama. Se é
+pedido vai chegar. Se a estimativa de tempo é pequena demais, o pedido pode atrasar gerar insatisfação ao cliente. Se é
 longa demais, o serviço parece lento e o cliente pode desistir da compra. Na base da Meituan, a estimativa atual
-do aplicativo erra em média \textbf{9,5 minutos}. Isso acontece porque ela é uma promessa
-com folga: o pedido chega, em média, 8 minutos antes do prometido.
+do aplicativo erra em média \textbf{9,5 minutos}. Isso acontece propositalmente para evitar atrasos
+e gerar folga na previsão. O pedido chega, em média, 8 minutos antes do prometido.
 
 \paragraph{Objetivo.} Prever, em minutos, quanto tempo passa entre a criação do pedido e a
 chegada ao cliente. A previsão é feita em dois momentos: na \textbf{compra} (\emph{checkout},
 quando ainda não há entregador) e no \textbf{despacho} (quando o entregador aceita o pedido).
-Na disciplina, o objetivo não é só errar pouco: é conseguir explicar, repetir e controlar
-como o modelo foi feito.
+Além de obter uma previsão precisa, temos como objetivo conseguir explicar, repetir e controlar
+como o modelo foi feito, garantindo governança e rastreabilidade ao trabalho desenvolvido.
 
 \paragraph{Resultado.} Nossos modelos erram, em média, cerca de \textbf{5 minutos}, quase
 metade do erro da estimativa atual (Tabela~\ref{tab:r2}). O modelo que menos errou foi o TabPFN
 (5,006 min). O LightGBM teve resultado próximo (5,133 min), com custo computacional muito menor.
+As transformações nos dados foram documentadas com a ferramenta \emph{DVC} e a rastreabilidade dos
+modelos foi garantida com a ferramenta \emph{MLflow} em um servidor privado. 
 
 \paragraph{Decisão.} Indicamos o \textbf{LightGBM} como o modelo para uso (\emph{candidato}),
 o \textbf{TabPFN} como \emph{desafiante} (o modelo que pode substituí-lo no futuro, se provar
 que é melhor) e o \textbf{Random Forest} como \emph{referência}, por ter sido o modelo da
 demonstração do MLflow. O modelo serve para apoiar decisões. Ele não define sozinho o prazo
-mostrado ao cliente e não pode ser usado para avaliar entregadores.
+mostrado ao cliente e também não pode ser usado para avaliar entregadores.
 
 \paragraph{Como a solução é governada.} O código fica no Git; os dados e o passo a passo do
 processamento, no DVC; os testes de modelos, no MLflow. O model card explica o que o modelo
-faz e o que não faz. Um plano de monitoramento diz o que medir, qual o limite e o que fazer.
-Uma matriz de riscos lista os riscos e quem cuida de cada um. Nenhuma versão entra em uso sem
-aprovação registrada (Seção~\ref{sec:gov}).
+faz e o que não faz. Nosso plano de monitoramento diz o que medir, qual os limites que engatilham ações
+e o que fazer quando esses gatilhos são atingidos.
+Há uma matriz de riscos que lista os riscos e define responsáveis por cuidar de cada um. 
+Nenhuma versão deve entrar em uso sem aprovação registrada (Seção~\ref{sec:gov}).
 
 \paragraph{Ligação com os objetivos estratégicos.}
 \begin{itemize}
@@ -108,8 +111,9 @@ aprovação registrada (Seção~\ref{sec:gov}).
 
 O código começou num notebook. Para que qualquer pessoa consiga repetir o trabalho, ele foi
 separado em um pacote Python (\texttt{meituan\_eta}) e cada passo virou uma etapa do DVC
-(Figura~\ref{fig:pipe}). O DVC sabe o que cada etapa recebe e o que entrega; se algo muda,
-ele refaz só o necessário.
+(Figura~\ref{fig:pipe}). O DVC sabe o que cada etapa recebe como entrada e o que gera de saída,
+criando um grafo acíclico de dependências entre os dados e scripts. Se algo alguma dependência
+muda, a ferramenta consegue refazer apenas as etapas necessárias.
 
 \begin{figure}[H]
 \centering
@@ -134,8 +138,8 @@ ele refaz só o necessário.
 \begin{enumerate}
   \item criar o ambiente Python 3.12 e instalar as bibliotecas de \texttt{requirements.txt}
         (com versões fixas);
-  \item colocar os quatro arquivos originais do desafio em \texttt{data/} (eles não vão
-        junto com o repositório, porque a licença não permite);
+  \item colocar os quatro arquivos originais do desafio \emph{Meituan INFORMS TSL Research Challenge}
+  em \texttt{data/} (eles não foram integrados ao repositório porque a licença não permite);
   \item rodar \texttt{dvc repro} para executar o pipeline e \texttt{dvc metrics show} para ver
         os resultados;
   \item abrir o MLflow com \texttt{mlflow server --backend-store-uri sqlite:///mlflow.db}.
@@ -155,14 +159,14 @@ A Tabela~\ref{tab:versao} mostra como fazemos isso com cada parte da solução.
 \toprule
 O que & Ferramenta & Como identificamos a versão \\
 \midrule
-Código & Git & cada mudança vira um \emph{commit}; o MLflow guarda o commit usado em cada execução \\
-Dados & DVC & o \texttt{dvc.lock} guarda o hash de cada arquivo de dados; o MLflow guarda o hash do conjunto usado \\
-Configurações & Git + DVC & \texttt{params.yaml} guarda parâmetros, semente aleatória, divisão dos dados e limites de limpeza; se um valor muda, o DVC refaz a etapa \\
-Modelo & DVC + MLflow & o arquivo do modelo (\texttt{models/*.pkl}) tem hash no \texttt{dvc.lock} e uma cópia na execução do MLflow \\
-Ambiente & Git & \texttt{requirements.txt} com as versões das bibliotecas \\
+Código & Git & cada mudança vira um \emph{commit}; o MLflow guarda o commit usado em cada execução. \\
+Dados & DVC & o \texttt{dvc.lock} guarda o hash de cada arquivo de dados; o MLflow guarda o hash do conjunto usado no treinamento do modelo. \\
+Configurações & Git + DVC & \texttt{params.yaml} guarda parâmetros, semente aleatória e a divisão dos dados; se um valor mudar, o DVC pode refazer a etapa. \\
+Modelo & DVC + MLflow & o arquivo do modelo (\texttt{models/*.pkl}) tem hash no \texttt{dvc.lock} e uma cópia na execução do MLflow. \\
+Ambiente & Git & \texttt{requirements.txt} com as versões das bibliotecas. \\
 \bottomrule
 \end{tabularx}
-\caption{O que é versionado e onde.}
+\caption{Formas de versionamento para cada domínio da solução implementada.}
 \label{tab:versao}
 \end{table}
 
@@ -179,9 +183,9 @@ fornecidos pela Meituan, uma empresa chinesa de delivery.
 \toprule
 Período & 17 a 24 de outubro de 2022 (8 dias), uma cidade, horário da China (UTC+8) \\
 Volume & 654.343 registros de entrega com 23 colunas, além de tabelas de ondas de entrega e de despacho \\
-O que é uma linha & uma tentativa de entrega; se um entregador recusa o pedido, ele pode aparecer de novo \\
+O que é uma linha & uma tentativa de entrega; se um entregador recusa o pedido, este pedido pode aparecer de novo \\
 Privacidade & os IDs foram trocados por códigos; as coordenadas foram deslocadas, mas não embaralhadas \\
-Licença & CC BY-NC 4.0: só uso não comercial, sem redistribuir os dados originais \\
+Licença & CC BY-NC 4.0: só uso não comercial não sendo permitido redistribuir os dados originais \\
 \bottomrule
 \end{tabularx}
 \caption{Origem dos dados. O dicionário de dados está no Apêndice~\ref{sec:dic}.}
@@ -192,7 +196,7 @@ Licença & CC BY-NC 4.0: só uso não comercial, sem redistribuir os dados origi
 horários estão na ordem certa e não há velocidades impossíveis. Os detalhes estão em
 \texttt{quality/QUALITY\_REPORT.md}.
 
-\paragraph{Transformações.} A Tabela~\ref{tab:funil} mostra quantos registros saem em cada
+\paragraph{Transformações.} A Tabela~\ref{tab:funil} mostra quantos registros sobram após cada
 filtro. O valor que queremos prever é o tempo, em minutos, entre a criação do pedido e a
 chegada ao cliente.
 
@@ -219,30 +223,29 @@ da compra (distâncias pela métrica de Manhattan, horário do pedido, tempo est
 distrito e tempo médio histórico do restaurante); 25 no momento do despacho (acrescenta posição
 e carga do entregador, tempos até o aceite e recusas anteriores); e 38 na rodada 2, com
 variáveis sobre a situação do restaurante, do distrito e do entregador no momento da previsão.
-Todas usam apenas eventos anteriores ao momento da previsão. O nome e o cálculo de cada
+Todas as variáveis usam apenas eventos anteriores ao momento da previsão. O nome e o cálculo de cada
 variável estão nas Tabelas~\ref{tab:dic-orig} e \ref{tab:dic-var} (Apêndice~\ref{sec:dic}).
 
 %=====================================================================
 \section{Registro dos experimentos}
 \label{sec:exp}
 
-\paragraph{Treinar um modelo $\times$ gerenciar o ciclo de vida.} Treinar um modelo é executar um
-código e obter um número. Gerenciar o ciclo de vida é conseguir responder depois, para
+\paragraph{Gestão do ciclo de vida} Enquanto treinar um modelo se resume à execução do
+código e obtenção de número, gerenciar o ciclo de vida implica conseguir responder depois, para
 qualquer resultado: com quais dados, qual código e quais parâmetros ele foi gerado, quando, e
-onde está o modelo. No MLflow, cada execução guarda essa sequência:
-\textbf{experimento $\rightarrow$ parâmetros $\rightarrow$ métricas $\rightarrow$ modelo
-$\rightarrow$ artefatos} (gráficos de erro e importância das variáveis), junto com o hash dos
+onde está o modelo. Com a ferramenta MLflow, foi possível guardar todos esses dados sobre cada
+experimento desenvolvido: parâmetros, métricas, modelo e artefatos (gráficos de erro e importância das variáveis), junto com o hash dos
 dados e o commit do código.
 
-\paragraph{Métricas.} Como o resultado é um número de minutos, métricas de classificação
-(acurácia, F1, AUC) não servem aqui. Usamos o \textbf{MAE} como métrica principal, porque está
-em minutos, a mesma unidade que o cliente sente. O \textbf{RMSE} mostra se há erros grandes,
-que são os que mais geram reclamação. O \textbf{R²} mostra quanto da variação do tempo o modelo
-explica. Tudo é comparado com a estimativa atual do aplicativo.
+\paragraph{Métricas.} Como trata-se de um esperimento de regressão, usamos o \textbf{MAE} como métrica principal
+pela sua interpretabilidade simples (média de minutos do erro). Além desta, também
+mensuramos o \textbf{RMSE}, que mostra se há erros grandes,
+que podem gerar reclamações, e o \textbf{R²}, que mostra quanto da variação do tempo o modelo
+explica. Todas as métricas foram comparadas com a estimativa atual do aplicativo.
 
 \subsection{Rodada 1 — pipeline com DVC e MLflow}
 
-Treino com 350 mil linhas e semente aleatória fixa (42), para que o resultado se repita.
+O treino foi realizado com 350 mil linhas e semente aleatória fixa (42), para que o resultado seja reprodutível.
 
 \begin{table}[H]
 \centering\footnotesize
@@ -261,7 +264,7 @@ Execução & Dados & Modelo & Parâmetros principais & MAE & RMSE & R² \\
 \end{tabular}
 \caption{Execuções registradas no MLflow em 01/11/2026 (experimento \texttt{meituan-eta}),
 avaliadas em \num{50000} pedidos de teste. ``Dados'' é o início do hash do arquivo usado;
-9 variáveis = compra, 19 = despacho. Fonte: \texttt{reports/experiment\_registry.csv}.}
+9 variáveis no momento da compra, 19 no despacho. Fonte: \texttt{reports/experiment\_registry.csv}.}
 \label{tab:r1}
 \end{table}
 
