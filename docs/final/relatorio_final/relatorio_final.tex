@@ -273,24 +273,19 @@ calculado usando todos os dados, antes de separar treino e teste. Assim, o conju
 teve acesso indireto a parte da resposta e os números ficaram melhores do que deveriam
 (vazamento de dados). Mantivemos
 esses números para comparar com as etapas anteriores, mas marcamos todas as execuções com o
-aviso \texttt{known\_limitation}. Foi o registro detalhado que nos permitiu encontrar o
-problema.
+aviso \texttt{known\_limitation}. O problema foi encontrado devido ao registro detalhado.
 
-\subsection{Rodada 2 — sem vazamento, novas variáveis e TabPFN}
+\subsection{Rodada 2 — consertado o vazamento, incluídas novas variáveis e treinado TabPFN}
 
-Um novo carregador de dados (\texttt{notebooks/dataloader.py}) passou a calcular as médias
-por restaurante e por entregador \emph{depois} de separar os dados, usando só o treino. Ele usa
-a base limpa inteira: \num{377104} linhas de treino, \num{107744} de validação e \num{53872}
-de teste. Comparamos três tipos de modelo:
+Corrigimos o carregador de dados (\texttt{notebooks/dataloader.py}) para que passasse a calcular as médias
+por restaurante e por entregador \emph{depois} de separar os dados, usando só o treino. Comparamos três tipos de modelo:
 \begin{itemize}
-  \item \textbf{Random Forest:} muitas árvores de decisão independentes; a previsão é a média
+  \item \textbf{Random Forest:} várias árvores de decisão independentes; a previsão é a média
         delas. Simples e estável, mas gera arquivos grandes.
   \item \textbf{LightGBM:} árvores construídas uma depois da outra; cada nova árvore corrige o
         erro das anteriores. Treina rapidamente em CPU e gera arquivos pequenos.
   \item \textbf{TabPFN-3.5:} uma rede neural que já vem treinada em milhões de tabelas
-        artificiais. Ela não aprende do zero com os nossos dados: recebe parte do treino como
-        exemplos e prevê por comparação. Precisa de GPU e fica bem mais lenta
-        quando recebe mais exemplos.
+        artificiais. Precisa de GPU e fica bem mais lenta quando recebe mais exemplos.
 \end{itemize}
 
 \begin{table}[H]
@@ -309,14 +304,14 @@ TabPFN-3.5 & \num{200000} & 38 & 5,006 & n/d & 0,692 & 106 min$^\dagger$ \\
 \textbf{Combinação 0,80 TabPFN + 0,20 LightGBM} & \num{377104} & 38 & \textbf{5,001} & n/d & \textbf{0,694} & 108 min$^\dagger$ \\
 \bottomrule
 \end{tabular}
-\caption{Rodada 2, momento do despacho, \num{53872} pedidos de teste. MAE e RMSE em minutos.
+\caption{Rodada 2 treianando para prever tempo de entrega no momento do despacho com \num{53872} pedidos de teste. MAE e RMSE em minutos.
 $^\dagger$GPU Tesla T4 no Google Colab; os demais foram executados em CPU.
 n/d: o RMSE não ficou registrado nessa execução.}
 \label{tab:r2}
 \end{table}
 
 \noindent A \emph{combinação} faz uma média ponderada das previsões dos dois modelos (80\% do
-TabPFN e 20\% do LightGBM). Os pesos foram escolhidos na validação, nunca no teste.
+TabPFN e 20\% do LightGBM). Os pesos foram escolhidos na etapa de validação.
 
 \paragraph{Versões registradas na rodada 2.} Pacote \texttt{tabpfn} 10.2.0 (modelo v3.5),
 semente 42, divisão 70/20/10. Para cada cenário, o notebook salvou um manifesto com o hash
@@ -349,13 +344,13 @@ quantidade de dados, o TabPFN erra de 0,15 a 0,19 min a menos.}
 
 \paragraph{O que os testes mostraram.}
 \begin{enumerate}
-  \item As novas variáveis ajudaram: no LightGBM, o erro caiu de 5,313 para 5,133 min.
-  \item O TabPFN erra menos que o LightGBM mesmo usando só metade do treino. Cada vez que
+  \item As variáveis calculadas no despacho melhoram o desempenho dos modelos. No LightGBM, o erro caiu de 5,313 para 5,133 min.
+  \item O TabPFN erra menos que o LightGBM mesmo usando só metade dos dados de treino. Cada vez que
         recebe o dobro de exemplos, o erro cai cerca de 0,07 min.
   \item A vantagem do TabPFN é pequena (0,13 min, cerca de 8 segundos por pedido) e foi
         medida numa única divisão dos dados.
   \item O custo é muito diferente: 106 minutos em GPU contra 2 minutos em CPU.
-  \item O Random Forest errou mais nas duas rodadas e gera arquivos de 176 a 330 MB.
+  \item O Random Forest errou mais nas duas rodadas e gerou artefatos de 176 a 330 MB.
 \end{enumerate}
 
 \noindent\textbf{O que ainda falta:} as execuções da rodada 2 foram feitas no Google Colab e
@@ -363,8 +358,10 @@ registradas nos manifestos, mas ainda não foram copiadas para o MLflow (Seção
 
 \subsection{Escolha do modelo}
 
-O modelo com menor erro não é escolhido automaticamente. Também pesamos o custo, a facilidade
-de treinar de novo, a facilidade de explicar e a dependência de serviços externos.
+Para escolher o modelo a ser usado em produção, não basta ter o melhor desempenho.
+O modelo utilizado será monitorado e tende a necessitar retreinamento devido a 
+circunstâncias como \emph{data drift}. Por isso, levamos em consideração o desempenho, o custo, a facilidade
+de treinar de novo, a interpretabilidade e a dependência de serviços externos.
 
 \begin{table}[H]
 \centering\small
@@ -372,10 +369,10 @@ de treinar de novo, a facilidade de explicar e a dependência de serviços exter
 \toprule
 Papel & MAE & Treino & Arquivo & Motivo \\
 \midrule
-\textbf{Candidato: LightGBM} & 5,133 & 2 min, CPU & $\sim$1 MB & erro próximo do melhor, baixo custo, indica o peso de cada variável, pode ser treinado novamente toda semana \\
-Desafiante: TabPFN / combinação & 5,001 & 106 min, GPU & modelo externo & menor erro; só substitui o candidato se o ganho se repetir em novos testes e o custo for aceito \\
-Referência: Random Forest & 5,672 & 4 min, CPU & 176--330 MB & modelo da demonstração do MLflow; serve de comparação \\
-Contingência: estimativa do app & 9,535 & -- & -- & usada se o modelo falhar ou for suspenso \\
+\textbf{Candidato: LightGBM} & 5,133 & 2 min, CPU & $\sim$1 MB & Desempenho próximo do melhor, baixo custo, indica o peso de cada variável, pode ser treinado novamente toda semana \\
+Desafiante: TabPFN / combinação & 5,001 & 106 min, GPU & modelo externo & Menor erro; só substitui o candidato se o ganho se repetir em novos testes e o custo for aceito \\
+Referência: Random Forest & 5,672 & 4 min, CPU & 176--330 MB & Modelo da demonstração do MLflow; serve de comparação \\
+Contingência: estimativa do app & 9,535 & -- & -- & Usada se o modelo falhar ou for suspenso \\
 \bottomrule
 \end{tabularx}
 \caption{Papel de cada modelo.}
@@ -385,12 +382,12 @@ Contingência: estimativa do app & 9,535 & -- & -- & usada se o modelo falhar ou
 \section{Model card}
 \label{sec:card}
 
-O model card é o documento que descreve o modelo para quem vai usá-lo, avaliá-lo ou
-auditá-lo: finalidade, dados de origem, desempenho, limites de validade, usos permitidos e
+O model card é o documento que descreve o modelo para fins de uso, avaliação e auditoria,
+contendo finalidade, dados de origem, desempenho, limites de validade, usos permitidos e
 responsáveis. A versão completa (1.1) está no arquivo \texttt{MODEL\_CARD.md}, na pasta
 \texttt{docs/model\_cards}, e contém também os hiperparâmetros, os identificadores de cada
 execução no MLflow e as instruções de reprodução. Esta seção apresenta os dez itens exigidos
-pela Etapa~4.
+pela Etapa~4 do trabalho.
 
 \subsection{Identificação}
 
@@ -398,7 +395,7 @@ pela Etapa~4.
 \centering\small
 \begin{tabularx}{\linewidth}{l L}
 \toprule
-Modelo & LightGBM (regressão), 38 variáveis, momento do despacho; versão equivalente com 13 variáveis para o momento da compra \\
+Modelo & LightGBM (regressão), 38 variáveis, calculado no momento do despacho; versão equivalente com 13 variáveis para o momento da compra \\
 Versão do card & 1.1, de 22/11/2026 \\
 Status & experimental; não aprovado para uso em produção \\
 Modelos relacionados & TabPFN-3.5 e combinação TabPFN + LightGBM (desafiantes); Random Forest (referência) \\
@@ -406,12 +403,11 @@ Modelos relacionados & TabPFN-3.5 e combinação TabPFN + LightGBM (desafiantes)
 \end{tabularx}
 \end{table}
 
-\subsection{Os dez itens exigidos}
+\subsection{Itens do Model Card}
 
 \paragraph{1. Objetivo.} Estimar, em minutos, o tempo entre a criação do pedido e a chegada ao
 cliente, em dois momentos: na compra (antes de haver entregador) e no despacho (após o aceite
 do entregador). A estimativa apoia o planejamento da operação e a comunicação com o cliente.
-O modelo não estima a probabilidade de atraso, não é um modelo de preço e não avalia pessoas.
 
 \paragraph{2. Dados utilizados.} Base pública da Meituan (INFORMS TSL Challenge), 8 dias de
 outubro de 2022, \num{538435} entregas válidas após a limpeza descrita na
@@ -420,11 +416,11 @@ Seção~\ref{sec:dados}. Licença CC BY-NC 4.0. Treino com \num{377104} linhas, 
 
 \paragraph{3. População e contexto.} Pedidos imediatos, aceitos por um entregador e
 concluídos, com duração entre 5 e 90 minutos, em uma única cidade chinesa. Ficam fora pedidos
-agendados, cancelados ou recusados por todos os entregadores. O modelo descreve essa
-operação específica e não deve ser tratado como representativo de outras cidades, outros
+agendados, cancelados ou recusados por todos os entregadores. O modelo descreve esse
+contexto específico e não deve ser tratado como representativo de outras cidades, outros
 períodos do ano ou outras empresas.
 
-\paragraph{4. Métricas.} MAE (métrica principal), RMSE e R², sempre comparados com a estimativa
+\paragraph{4. Métricas.} MAE (métrica principal), RMSE e R² comparados com a estimativa
 atual do aplicativo no mesmo conjunto de teste.
 
 \begin{table}[H]
@@ -445,15 +441,15 @@ Diferença & $-46\%$ & $-43\%$ & $+0{,}654$ \\
   \item Apenas 8 dias e uma cidade; não há validação em outro período ou região real.
   \item Uma única divisão aleatória dos dados, sem repetição com outras sementes.
   \item Ausência de informações sobre clima, trânsito e promoções.
-  \item O modelo fornece um valor único, sem intervalo de confiança; não garante que o pedido
+  \item O modelo fornece um valor único, sem intervalo de confiança; além disso, não há garantia de que o pedido
         chegue antes do tempo previsto.
   \item As coordenadas foram deslocadas pela Meituan; as distâncias são aproximações.
   \item Na rodada 1, o vazamento de dados torna as métricas otimistas; a rodada 2 corrige o
-        problema, mas suas execuções ainda não estão no MLflow.
+        problema, mas suas execuções ainda não foram migradas para o MLflow.
 \end{itemize}
 
 \paragraph{6. Usos recomendados.} Apoio a analistas de operação; planejamento da quantidade de
-entregadores por região e horário; comparação entre regiões em nível agregado; base para o
+entregadores por região e horário; comparação entre regiões da cidade; base para o
 desenvolvimento de um modelo de produção; ensino de práticas de reprodutibilidade. Em todos
 os casos, com supervisão humana.
 
@@ -466,7 +462,8 @@ os casos, com supervisão humana.
         representam a variação de uma operação real (estações do ano, feriados, outras
         regiões). Além disso, a licença CC BY-NC dos dados atuais não permite uso comercial.
   \item \textbf{Avaliar, punir ou ranquear entregadores:} o tempo de entrega depende de fatores
-        fora do controle do entregador (região, restaurante, demanda).
+        fora do controle do entregador (região, restaurante, demanda), portanto entregadores que
+        levem mais tempo na entrega do que o previsto pelo modelo não podem ser punidos por isso.
 \end{itemize}
 
 \paragraph{8. Riscos.} Prometer prazos curtos demais e gerar atrasos; perda de qualidade
@@ -478,18 +475,16 @@ Seção~\ref{sec:risco}.
 \begin{itemize}
   \item \textbf{Privacidade:} os dados contêm localização de clientes, restaurantes e
         entregadores. Mesmo com coordenadas deslocadas, há risco de reidentificação; os dados
-        ficam fora do repositório e com acesso restrito.
+        devem ficar fora do repositório e com acesso restrito.
   \item \textbf{Entregadores:} as variáveis com o histórico de cada entregador melhoram a
-        previsão, mas não podem ser usadas para avaliação individual. Antes de qualquer uso
-        real, deve-se medir o ganho do modelo sem essas variáveis.
+        previsão, mas não podem ser usadas para avaliação individual.
   \item \textbf{Equidade:} o modelo não usa atributos pessoais, mas região e restaurante podem
         refletir diferenças socioeconômicas. O erro por distrito faz parte do monitoramento.
   \item \textbf{Transparência e revisão humana:} limitações documentadas; decisões com efeito
         sobre clientes ou entregadores exigem revisão humana.
 \end{itemize}
 
-\paragraph{10. Responsáveis.} Equipe do projeto: Guilherme Braga (pipeline e execuções no
-MLflow), Guilherme Costanzi e Rafael Cobo. A aprovação para uso cabe ao comitê de governança
+\paragraph{10. Responsáveis.} Equipe do projeto: Guilherme Braga, Guilherme Costanzi e Rafael Cobo. A aprovação para uso cabe ao comitê de governança
 (Seção~\ref{sec:gov}). O card deve ser revisado a cada novo treino, após incidentes e, no
 mínimo, a cada seis meses.
 
@@ -497,28 +492,31 @@ mínimo, a cada seis meses.
 \section{Plano de monitoramento}
 \label{sec:mon}
 
-\emph{Depois que o modelo entra em uso, como sabemos que ele continua funcionando?} Medindo
-quatro grupos de indicadores toda semana (Tabelas~\ref{tab:mon} e \ref{tab:mon2}). Os limites partem dos resultados do LightGBM
-candidato (MAE 5,13 min; R² 0,683). O tempo real de cada entrega fica conhecido logo depois do
-pedido, então o erro do modelo pode ser medido quase na hora.
+Para garantir que a manutenção do funcionamento do modelo após ele entrar em uso, planejamos medir
+quatro grupos de indicadores toda semana (Tabelas~\ref{tab:mon} e \ref{tab:mon2}). Os gatilhos de ação 
+foram definidos a partir dos resultados do LightGBM candidato (MAE 5,13 min; R² 0,683). 
+O tempo real de cada entrega é determinado logo depois do pedido, então o erro do modelo pode ser medido imediatamente.
+
+O data drift será mensurado a partir do índice de estabilidade populacional (PSI), que detecta mudanças
+na distribuição dos valores de um atributo em um conjunto de dados.
 
 \begin{table}[H]
 \centering\footnotesize
 \begin{tabularx}{\linewidth}{l >{\raggedright\arraybackslash}p{4.2cm} L L}
 \toprule
-Grupo & Indicador & Limite & Ação \\
+Grupo & Indicador & Gatilho & Ação \\
 \midrule
-Dados & valores faltantes ou zeros & $>1\%$ numa variável ou o dobro do normal & investigar a origem; usar a estimativa do app (contingência) se for uma variável importante \\
-Dados & data drift: mudança nas variáveis de entrada (índice PSI) & PSI $>0{,}10$ alerta; $>0{,}25$ crítico & ver quais variáveis mudaram; no crítico, avaliar novo treino \\
-Dados & mudança na distribuição do tempo real (média e variação) & mudança $>10\%$ & conferir junto com o R²; investigar a causa \\
-Dados & qualidade e formato & coluna faltando, tipo errado, hora fora de 0--23, distância negativa & bloquear o lote e avisar o responsável de dados \\
-Dados & categorias novas & $>5\%$ dos pedidos com distrito ou restaurante desconhecido & incluir no próximo treino \\
+Dados & Valores faltantes ou zeros & $>1\%$ numa variável ou o dobro do normal & Investigar a origem e usar a estimativa do app (contingência) se for uma variável importante \\
+Dados & Data drift: mudança nas variáveis de entrada (índice PSI) & PSI $>0{,}10$ alerta; $>0{,}25$ crítico & Ver quais variáveis mudaram; no crítico, avaliar novo treino \\
+Dados & Mudança na distribuição do tempo de entrega real (média e variação) & mudança > 10\% & Conferir junto com o R², investigar a causa \\
+Dados & Qualidade e formato & coluna faltando, tipo errado, hora fora de 0--23, distância negativa & Bloquear o lote e avisar o responsável de dados \\
+Dados & Categorias novas & $>5\%$ dos pedidos com distrito ou restaurante desconhecido & Incluir no próximo treino \\
 \midrule
-Modelo & desempenho: MAE semanal & $>5{,}9$ min ($+15\%$) alerta; $>6{,}4$ min ($+25\%$) crítico & alerta: analisar; crítico: treinar de novo e reavaliar \\
-Modelo & erros: desvio médio (real $-$ previsto) & mais de 1 min para um dos lados & ajustar o modelo; ver se a operação mudou \\
-Modelo & erros grandes & pedidos com erro $>10$ min acima de 1,5 vez o normal & revisar os casos por região e horário \\
-Modelo & model drift: queda do R² & queda $>0{,}05$ alerta; $>0{,}15$ crítico & comparar com o desafiante; treinar de novo \\
-Modelo & erro por região & diferença de MAE $>2$ min entre distritos & análise de viés pelo comitê \\
+Modelo & Desempenho: MAE semanal & $>5{,}9$ min ($+15\%$) alerta; $>6{,}4$ min ($+25\%$) crítico & Alerta: analisar; crítico: treinar de novo e reavaliar \\
+Modelo & Erros: desvio médio (real $-$ previsto) & mais de 1 min para um dos lados & Ajustar o modelo; ver se a operação mudou \\
+Modelo & Erros grandes & pedidos com erro $>10$ min acima de 1,5 vez o normal & Revisar os casos por região e horário \\
+Modelo & Model drift: queda do R² & queda $>0{,}05$ alerta; $>0{,}15$ crítico & Comparar com o desafiante; treinar de novo \\
+Modelo & Erro por região & diferença de MAE $>2$ min entre distritos & Análise de viés pelo comitê \\
 \bottomrule
 \end{tabularx}
 \caption{Plano de monitoramento (parte 1): dados e modelo.}
@@ -531,26 +529,26 @@ Modelo & erro por região & diferença de MAE $>2$ min entre distritos & anális
 \toprule
 Grupo & Indicador & Limite & Ação \\
 \midrule
-Negócio & benefício esperado: ganho sobre a estimativa do app & MAE menos de 40\% menor que o do app & reavaliar se o uso do modelo se justifica \\
-Negócio & impacto: pedidos que chegam depois do prazo prometido & $>17\%$ (hoje $\approx 14\%$) & rever a folga do prazo prometido \\
-Negócio & impacto: reclamações por atraso a cada 1.000 pedidos & $+20\%$ sobre a média de 4 semanas & analisar a causa com a operação \\
-Negócio & utilização: pedidos com previsão e tempo de resposta & $<99\%$ dos pedidos; resposta lenta ($>200$ ms) & verificar o serviço; usar a estimativa do app (contingência) \\
+Negócio & Benefício esperado: ganho sobre a estimativa do app & MAE menos de 40\% menor que o do app & Reavaliar se o uso do modelo se justifica \\
+Negócio & Pedidos que chegam depois do prazo prometido & $>17\%$ (hoje $\approx 14\%$) & Rever a folga do prazo prometido \\
+Negócio & Reclamações por atraso a cada 1.000 pedidos & $+20\%$ sobre a média de 4 semanas & Analisar a causa com a operação \\
+Negócio & Pedidos com previsão e tempo de resposta & $<99\%$ dos pedidos; resposta lenta ($>200$ ms) & Verificar o serviço; usar a estimativa do app (contingência) \\
 \midrule
-Governança & incidentes & qualquer incidente grave & registrar, suspender o uso automático, analisar em 5 dias úteis \\
-Governança & reclamações sobre o modelo & qualquer reclamação de cliente ou entregador ligada à previsão & analisar e responder com registro \\
-Governança & vieses & diferença por região ou turno acima do limite & rever variáveis e regras de uso \\
-Governança & necessidade de revisão & model card com mais de 6 meses, novo treino ou incidente & revisão obrigatória antes de continuar \\
+Governança & Incidentes & Qualquer incidente grave & Registrar, suspender o uso automático, analisar em 5 dias úteis \\
+Governança & Reclamações sobre o modelo & Qualquer reclamação de cliente ou entregador ligada à previsão & Analisar e responder com registro \\
+Governança & Vieses & Diferença por região ou turno acima do limite & Rever variáveis e regras de uso \\
+Governança & Necessidade de revisão & Model card com mais de 6 meses, novo treino ou incidente & Revisão obrigatória antes de continuar \\
 \bottomrule
 \end{tabularx}
 \caption{Plano de monitoramento (parte 2): negócio e governança.}
 \label{tab:mon2}
 \end{table}
 
-\subsection{Simulação: chegada de dados de uma região nova}
+\subsection{Simulação de monitoramento com a chegada de dados de uma região nova}
 
-Não temos dados de outras semanas. Por isso, simulamos a chegada de dados novos de outro jeito:
-treinamos o modelo sem os distritos 8 e 9 e o testamos só com eles, como se a operação chegasse
-a uma região que o modelo nunca viu. Usamos o TabPFN com 50 mil linhas e 25 variáveis, que já
+Não temos dados de outras semanas. Por isso, simulamos a chegada de dados novos 
+treinando o modelo sem os distritos 8 e 9 e testando só com eles, como se houvesse uma expansão
+para uma região que o modelo nunca viu. Usamos o TabPFN com 50 mil linhas e 25 variáveis, que já
 tinha sido rodado nos dois cenários.
 
 \begin{table}[H]
@@ -561,7 +559,7 @@ Indicador & Referência & Região nova & Situação \\
 \midrule
 MAE (min) & 5,323 & 5,706 ($+7{,}2\%$) & dentro do limite \\
 R² & 0,653 & 0,548 ($-0{,}105$) & \textbf{alerta} \\
-Variação do tempo real (min²) & 139,7 & 120,9 ($-13\%$) & \textbf{mudou} \\
+Variação do tempo de entrega real (min²) & 139,7 & 120,9 ($-13\%$) & \textbf{mudou} \\
 R² da estimativa do app & 0,029 & $-0{,}117$ & piora também \\
 \bottomrule
 \end{tabular}
@@ -570,8 +568,8 @@ pedidos); região nova: distritos 8 e 9 (\num{79023} pedidos).}
 \label{tab:sim}
 \end{table}
 
-\noindent\textbf{Interpretação.} Considerando apenas o MAE, nenhum alerta seria emitido. O plano
-identifica a mudança porque também acompanha o R² e a distribuição do tempo real: na região
+\noindent\textbf{Interpretação.} Considerando apenas o MAE, nenhum alerta seria emitido, mas o plano
+de monitoramento identifica a mudança na distribuição do tempo de entrega: na região
 nova os tempos variam menos, e o modelo explica uma parte menor dessa variação. A ação prevista
 é abrir uma revisão, analisar o erro por distrito e incluir dados da região no próximo treino
 antes de usar o modelo nela. O exemplo mostra por que o plano combina vários indicadores.
@@ -580,7 +578,7 @@ antes de usar o modelo nela. O exemplo mostra por que o plano combina vários in
 \section{Matriz de riscos}
 \label{sec:risco}
 
-Cada risco recebe uma nota de 1 (baixa) a 3 (alta) para a probabilidade (P) de acontecer e
+Cada risco mapeado recebe uma nota de 1 (baixa) a 3 (alta) para a probabilidade (P) de acontecer e
 para o impacto (I) se acontecer. O nível é P $\times$ I: 6 ou mais é alto, 3 ou 4 é médio,
 até 2 é baixo.
 
@@ -613,7 +611,7 @@ Segurança & senha de acesso (token) do TabPFN exposta & Média & Médio & \Rm &
 \section{Como a solução será governada}
 \label{sec:gov}
 
-\paragraph{Quem faz o quê.}
+\paragraph{Responsabilidades previstas pela solução}
 \begin{itemize}
   \item \textbf{Responsável de dados:} qualidade, validação, acesso e licença dos dados.
   \item \textbf{Responsável do modelo:} treino, avaliação, MLflow, model card e acompanhamento
@@ -621,16 +619,17 @@ Segurança & senha de acesso (token) do TabPFN exposta & Média & Médio & \Rm &
   \item \textbf{Comitê de governança} (produto, operação e jurídico/privacidade): aprova cada
         versão, analisa incidentes e vieses e decide os usos permitidos.
 \end{itemize}
-No projeto, os três papéis ficam com a equipe; numa empresa, seriam pessoas diferentes.
+Nessa disciplina, os três papéis foram exercidos pelo grupo, mas numa empresa seriam
+exercidos por pessoas diferentes.
 
-\paragraph{Como uma nova versão entra em uso.}
+\paragraph{Protocolo para implementação de uma nova versão do modelo}
 \begin{enumerate}
   \item a mudança no código, nos dados ou nos parâmetros é registrada no Git e no DVC;
   \item o \texttt{dvc repro} gera o novo modelo e o MLflow registra a execução;
   \item a nova versão é comparada com a atual, nos mesmos dados de teste e por região;
   \item o model card é atualizado e o comitê aprova ou recusa, com registro da decisão;
-  \item a versão aprovada roda primeiro ``em paralelo'': faz previsões, mas elas não aparecem
-        para o cliente;
+  \item a versão aprovada roda primeiro ``em paralelo'', fazendo previsões mas sem mostrar elas
+        para o cliente, para fins de monitoramento e avaliação em ambiente de produção;
   \item o plano de monitoramento (Tabela~\ref{tab:mon}) acompanha a versão; num alerta
         crítico, volta-se ao passo 1 ou à versão anterior, identificada no MLflow.
 \end{enumerate}
@@ -646,7 +645,7 @@ No projeto, os três papéis ficam com a equipe; numa empresa, seriam pessoas di
         modelos (como os 0,13 min entre TabPFN e LightGBM) podem mudar com outra divisão.
   \item Não há clima, trânsito ou promoções nos dados.
   \item O modelo dá um valor único, sem margem de erro.
-  \item As execuções da rodada 2 estão registradas em manifestos, mas não no MLflow.
+  \item As execuções da rodada 2 ainda não foram migradas para o MLflow.
   \item O plano de monitoramento foi definido e simulado, mas não está funcionando de forma
         automática.
 \end{itemize}

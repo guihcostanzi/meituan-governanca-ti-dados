@@ -1,0 +1,91 @@
+\relax 
+\providecommand\babel@aux[2]{}
+\@nameuse{bbl@beforestart}
+\catcode `"\active 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\babel@aux{brazil}{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Relatório executivo}{1}{section.1}\protected@file@percent }
+\newlabel{sec:exec}{{1}{1}{Relatório executivo}{section.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Problema.}{1}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Objetivo.}{1}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Resultado.}{1}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Decisão.}{1}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Como a solução é governada.}{1}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Ligação com os objetivos estratégicos.}{2}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Repositório e reprodução}{2}{section.2}\protected@file@percent }
+\newlabel{sec:repo}{{2}{2}{Repositório e reprodução}{section.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Etapas do pipeline no DVC (arquivo \texttt  {dvc.yaml}).}}{2}{figure.caption.7}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:pipe}{{1}{2}{Etapas do pipeline no DVC (arquivo \texttt {dvc.yaml})}{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Versionamento}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Formas de versionamento para cada domínio da solução implementada.}}{2}{table.caption.8}\protected@file@percent }
+\newlabel{tab:versao}{{1}{2}{Formas de versionamento para cada domínio da solução implementada}{table.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Dataset documentado}{3}{section.3}\protected@file@percent }
+\newlabel{sec:dados}{{3}{3}{Dataset documentado}{section.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Origem.}{3}{section*.9}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Origem dos dados. O dicionário de dados está no Apêndice~\ref {sec:dic}.}}{3}{table.caption.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Qualidade.}{3}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Transformações.}{3}{section*.12}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Limpeza dos dados: ficam 82,3\% dos registros.}}{3}{table.caption.13}\protected@file@percent }
+\newlabel{tab:funil}{{3}{3}{Limpeza dos dados: ficam 82,3\% dos registros}{table.caption.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{Variáveis criadas.}{3}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Registro dos experimentos}{3}{section.4}\protected@file@percent }
+\newlabel{sec:exp}{{4}{3}{Registro dos experimentos}{section.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Gestão do ciclo de vida}{3}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Métricas.}{4}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Rodada 1 — pipeline com DVC e MLflow}{4}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Execuções registradas no MLflow em 01/11/2026 (experimento \texttt  {meituan-eta}), avaliadas em \num {50000} pedidos de teste. ``Dados'' é o início do hash do arquivo usado; 9 variáveis no momento da compra, 19 no despacho. Fonte: \texttt  {reports/experiment\_registry.csv}.}}{4}{table.caption.17}\protected@file@percent }
+\newlabel{tab:r1}{{4}{4}{Execuções registradas no MLflow em 01/11/2026 (experimento \texttt {meituan-eta}), avaliadas em \num {50000} pedidos de teste. ``Dados'' é o início do hash do arquivo usado; 9 variáveis no momento da compra, 19 no despacho. Fonte: \texttt {reports/experiment\_registry.csv}}{table.caption.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Rodada 2 — consertado o vazamento, incluídas novas variáveis e treinado TabPFN}{4}{subsection.4.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Rodada 2 treianando para prever tempo de entrega no momento do despacho com \num {53872} pedidos de teste. MAE e RMSE em minutos. $^\dagger $GPU Tesla T4 no Google Colab; os demais foram executados em CPU. n/d: o RMSE não ficou registrado nessa execução.}}{5}{table.caption.18}\protected@file@percent }
+\newlabel{tab:r2}{{5}{5}{Rodada 2 treianando para prever tempo de entrega no momento do despacho com \num {53872} pedidos de teste. MAE e RMSE em minutos. $^\dagger $GPU Tesla T4 no Google Colab; os demais foram executados em CPU. n/d: o RMSE não ficou registrado nessa execução}{table.caption.18}{}}
+\@writefile{toc}{\contentsline {paragraph}{Versões registradas na rodada 2.}{5}{section*.19}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Curva de aprendizado: os dois modelos recebem exatamente as mesmas linhas. Com a mesma quantidade de dados, o TabPFN erra de 0,15 a 0,19 min a menos.}}{5}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:lc}{{2}{5}{Curva de aprendizado: os dois modelos recebem exatamente as mesmas linhas. Com a mesma quantidade de dados, o TabPFN erra de 0,15 a 0,19 min a menos}{figure.caption.20}{}}
+\@writefile{toc}{\contentsline {paragraph}{O que os testes mostraram.}{5}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Escolha do modelo}{5}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Papel de cada modelo.}}{6}{table.caption.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Model card}{6}{section.5}\protected@file@percent }
+\newlabel{sec:card}{{5}{6}{Model card}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Identificação}{6}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Itens do Model Card}{6}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{1. Objetivo.}{6}{section*.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{2. Dados utilizados.}{6}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{3. População e contexto.}{7}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{4. Métricas.}{7}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{5. Limitações.}{7}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{6. Usos recomendados.}{7}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{7. Usos não recomendados.}{7}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{8. Riscos.}{7}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{9. Aspectos éticos.}{7}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{10. Responsáveis.}{8}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Plano de monitoramento}{8}{section.6}\protected@file@percent }
+\newlabel{sec:mon}{{6}{8}{Plano de monitoramento}{section.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Plano de monitoramento (parte 1): dados e modelo.}}{8}{table.caption.35}\protected@file@percent }
+\newlabel{tab:mon}{{7}{8}{Plano de monitoramento (parte 1): dados e modelo}{table.caption.35}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Plano de monitoramento (parte 2): negócio e governança.}}{9}{table.caption.36}\protected@file@percent }
+\newlabel{tab:mon2}{{8}{9}{Plano de monitoramento (parte 2): negócio e governança}{table.caption.36}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Simulação de monitoramento com a chegada de dados de uma região nova}{9}{subsection.6.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Simulação de chegada de dados novos. Referência: divisão aleatória (\num {53872} pedidos); região nova: distritos 8 e 9 (\num {79023} pedidos).}}{9}{table.caption.37}\protected@file@percent }
+\newlabel{tab:sim}{{9}{9}{Simulação de chegada de dados novos. Referência: divisão aleatória (\num {53872} pedidos); região nova: distritos 8 e 9 (\num {79023} pedidos)}{table.caption.37}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Matriz de riscos}{9}{section.7}\protected@file@percent }
+\newlabel{sec:risco}{{7}{9}{Matriz de riscos}{section.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Matriz de riscos de dados, modelo, privacidade, segurança e ética.}}{10}{table.caption.38}\protected@file@percent }
+\newlabel{tab:risco}{{10}{10}{Matriz de riscos de dados, modelo, privacidade, segurança e ética}{table.caption.38}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Como a solução será governada}{10}{section.8}\protected@file@percent }
+\newlabel{sec:gov}{{8}{10}{Como a solução será governada}{section.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Responsabilidades previstas pela solução}{10}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Protocolo para implementação de uma nova versão do modelo}{10}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Limitações}{11}{section.9}\protected@file@percent }
+\newlabel{sec:lim}{{9}{11}{Limitações}{section.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {10}Onde está cada item da entrega final}{11}{section.10}\protected@file@percent }
+\newlabel{sec:checklist}{{10}{11}{Onde está cada item da entrega final}{section.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Dicionário de dados}{11}{appendix.A}\protected@file@percent }
+\newlabel{sec:dic}{{A}{11}{Dicionário de dados}{appendix.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces As 23 colunas da tabela original de entregas. Horários em segundos desde 1970 (Unix).}}{11}{table.caption.42}\protected@file@percent }
+\newlabel{tab:dic-orig}{{11}{11}{As 23 colunas da tabela original de entregas. Horários em segundos desde 1970 (Unix)}{table.caption.42}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Variáveis criadas, com os nomes usados em \texttt  {notebooks/dataloader.py}. Na rodada 1 (pipeline \texttt  {meituan\_eta}), algumas têm nomes em português (por exemplo, \texttt  {tempo\_ate\_aceite\_min}, \texttt  {carga\_entregador}, \texttt  {poi\_target\_enc}).}}{12}{table.caption.43}\protected@file@percent }
+\newlabel{tab:dic-var}{{12}{12}{Variáveis criadas, com os nomes usados em \texttt {notebooks/dataloader.py}. Na rodada 1 (pipeline \texttt {meituan\_eta}), algumas têm nomes em português (por exemplo, \texttt {tempo\_ate\_aceite\_min}, \texttt {carga\_entregador}, \texttt {poi\_target\_enc})}{table.caption.43}{}}
+\gdef \@abspage@last{12}

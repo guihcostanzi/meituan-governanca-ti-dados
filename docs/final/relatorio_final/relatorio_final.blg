@@ -1,0 +1,5 @@
+[0] Config.pm:307> INFO - This is Biber 2.19
+[0] Config.pm:310> INFO - Logfile is 'relatorio_final.blg'
+[141] biber:340> INFO - === Tue Nov 24, 2026, 13:17:41
+[388] Utils.pm:399> ERROR - Cannot find 'relatorio_final.bcf'!
+[388] Biber.pm:136> INFO - ERRORS: 1
